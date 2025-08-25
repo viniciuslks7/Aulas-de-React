@@ -1,15 +1,14 @@
-# 🚀 Boer App - Aplicativo React Native com Expo + TypeScript
+# 💝 AUXILIUM - App de Doações
 
-Um aplicativo moderno e responsivo desenvolvido com **React Native**, **Expo** e **TypeScript**, otimizado para funcionar em múltiplas plataformas: **iOS**, **Android** e **Web**.
+Um aplicativo móvel desenvolvido com **React Native** e **Expo** para conectar doadores e pessoas que precisam de ajuda, promovendo a solidariedade e o bem-estar social.
 
 ## ✨ Características
 
-- 🎨 **Interface Moderna**: Design limpo e responsivo com Material Design
-- 📱 **Multiplataforma**: Funciona perfeitamente em dispositivos móveis e navegadores web
-- ⚡ **Performance**: Desenvolvido com React Native para máxima eficiência
-- 🔒 **TypeScript**: Tipagem estática para código mais seguro e manutenível
-- 🔄 **Navegação por Abas**: Sistema de navegação intuitivo com três seções principais
-- 🎯 **Componentes Reutilizáveis**: Arquitetura modular e escalável
+- 💝 **Foco em Doações**: Conecta pessoas que querem ajudar com quem precisa
+- 🎨 **Interface Intuitiva**: Design limpo e fácil de usar
+- 📱 **Multiplataforma**: Funciona em iOS, Android e Web
+- 🔒 **TypeScript**: Código tipado e bem estruturado
+- 🚀 **React Native**: Desenvolvimento nativo e performático
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -59,30 +58,23 @@ npm start
 
 ## 📱 Funcionalidades
 
-### 🏠 **Página Inicial**
-- Mensagem de boas-vindas personalizada
-- Cards informativos sobre as funcionalidades do app
-- Botão de ação interativo
-- Design responsivo e atrativo
+### 🏠 **Tela Inicial**
+- Logo representativo com coração e caixa
+- Título "AUXILIUM" em destaque
+- Tagline inspiradora sobre doação
+- Três botões principais de ação
 
-### 👤 **Perfil do Usuário**
-- Informações básicas do usuário
-- Status da conta
-- Botão para editar perfil
-- Modal de edição com validação
-
-### ⚙️ **Configurações**
-- Toggle para notificações
-- Toggle para modo escuro
-- Configurações de idioma
-- Botão para resetar configurações
+### 🔐 **Sistema de Autenticação**
+- **CADASTRE-SE**: Para novos usuários
+- **LOGIN**: Para usuários existentes
+- **SOU UM DOADOR**: Acesso direto para doadores
 
 ## 🎨 Estrutura do Projeto
 
 ```
-Boer/
-├── App.tsx              # Componente principal da aplicação (TypeScript)
-├── index.tsx            # Ponto de entrada da aplicação (TypeScript)
+AUXILIUM-App/
+├── App.tsx              # Componente principal da aplicação
+├── index.tsx            # Ponto de entrada da aplicação
 ├── tsconfig.json        # Configuração TypeScript
 ├── app.json             # Configurações do Expo
 ├── package.json         # Dependências e scripts
@@ -104,13 +96,25 @@ Boer/
 - `npm run build` - Constrói a aplicação para produção
 - `npm run lint` - Executa o linter do Expo
 
-## 🔒 Benefícios do TypeScript
+## 🎯 Conceitos React Demonstrados
 
-- **Segurança de Tipos**: Detecta erros em tempo de compilação
-- **IntelliSense**: Autocompletar e documentação inline
-- **Refatoração Segura**: Mudanças de código mais confiáveis
-- **Manutenibilidade**: Código mais legível e organizado
-- **Documentação**: Tipos servem como documentação viva
+### **Componentes Funcionais:**
+- `App`: Componente principal da aplicação
+- Uso de `React.FC` com TypeScript
+
+### **Estilos e Layout:**
+- `StyleSheet.create()` para estilos organizados
+- Flexbox para layout responsivo
+- Cores e tipografia consistentes
+
+### **Eventos e Interação:**
+- `TouchableOpacity` para botões interativos
+- Funções de callback para eventos
+- Console.log para debugging
+
+### **Estrutura de Arquivos:**
+- Separação clara entre `index.tsx` e `App.tsx`
+- Organização de estilos e componentes
 
 ## 🌐 Desenvolvimento Web
 
@@ -132,20 +136,25 @@ Para desenvolvimento mobile, o app oferece:
 
 ## 🚀 Próximos Passos
 
-- [ ] Implementar autenticação de usuários
-- [ ] Adicionar persistência de dados local
-- [ ] Integrar com APIs externas
-- [ ] Implementar temas escuro/claro
-- [ ] Adicionar testes automatizados com Jest
-- [ ] Configurar CI/CD
-- [ ] Adicionar mais validações TypeScript
+- [ ] Implementar sistema de cadastro
+- [ ] Adicionar tela de login
+- [ ] Criar perfil de doador
+- [ ] Sistema de categorias de doação
+- [ ] Chat entre doadores e beneficiários
+- [ ] Sistema de notificações
+- [ ] Integração com APIs de pagamento
+- [ ] Modo offline
+
+## 💡 Sobre o Projeto
+
+**AUXILIUM** é mais que um app - é uma plataforma que promove a solidariedade e conecta pessoas através da doação. O nome vem do latim e significa "ajuda" ou "auxílio", refletindo nossa missão de facilitar o ato de doar.
 
 ## 🤝 Contribuindo
 
 1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
+2. Crie uma branch para sua feature (`git checkout -b feature/NovaFuncionalidade`)
+3. Commit suas mudanças (`git commit -m 'feat: adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
 5. Abra um Pull Request
 
 ## 📄 Licença
@@ -154,7 +163,7 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 
 ## 📞 Suporte
 
-Se você encontrar algum problema ou tiver dúvidas, por favor:
+Para problemas ou dúvidas, por favor:
 
 1. Verifique se todas as dependências estão instaladas
 2. Execute `npm run type-check` para verificar tipos
@@ -163,4 +172,4 @@ Se você encontrar algum problema ou tiver dúvidas, por favor:
 
 ---
 
-**Desenvolvido com ❤️ usando React Native, Expo e TypeScript**
+**Desenvolvido com ❤️ para promover a solidariedade e conectar pessoas através da doação**

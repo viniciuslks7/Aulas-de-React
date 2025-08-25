@@ -1,6 +1,6 @@
-# 🚀 Instruções Rápidas - Boer App (TypeScript)
+# 💝 Instruções Rápidas - AUXILIUM App
 
-## ⚡ Executar o Aplicativo
+## ⚡ Executar o Aplicativo de Doações
 
 ### Para Web (Navegador):
 ```bash
@@ -20,31 +20,24 @@ npm run type-check
 ```
 Verifica se há erros de tipagem no código.
 
-## 🎯 Funcionalidades do App
+## 📱 Funcionalidades do App
 
-### 🏠 **Página Inicial**
-- Cards informativos sobre o app
-- Design responsivo e moderno
-- Mensagem de boas-vindas
-- Botão de ação interativo
+### 🏠 **Tela Inicial**
+- Logo representativo com coração e caixa
+- Título "AUXILIUM" em destaque
+- Tagline inspiradora sobre doação
+- Três botões principais de ação
 
-### 👤 **Perfil**
-- Informações do usuário
-- Status da conta
-- Dados organizados
-- Modal de edição de perfil
-
-### ⚙️ **Configurações**
-- Toggle para notificações
-- Toggle para modo escuro
-- Configurações de idioma
-- Botão de reset
+### 🔐 **Sistema de Autenticação**
+- **CADASTRE-SE**: Para novos usuários
+- **LOGIN**: Para usuários existentes
+- **SOU UM DOADOR**: Acesso direto para doadores
 
 ## 🔧 Navegação
 
-- Use as abas na parte inferior para navegar entre as seções
-- Cada aba tem um ícone e texto descritivo
-- A aba ativa é destacada visualmente
+- Interface simples e intuitiva
+- Botões grandes e fáceis de tocar
+- Design responsivo para diferentes telas
 
 ## 🔒 TypeScript
 
@@ -65,6 +58,20 @@ Verifica se há erros de tipagem no código.
 
 - ✅ iOS (iPhone/iPad)
 - ✅ Android (Smartphones/Tablets)
+
+## 🎯 Como Usar para Aprender React
+
+### **Para Estudantes:**
+1. **Analise a estrutura** dos componentes
+2. **Observe o uso** de `React.FC` com TypeScript
+3. **Estude os estilos** organizados com `StyleSheet.create()`
+4. **Veja como** os eventos são tratados com `TouchableOpacity`
+
+### **Para Professores:**
+1. **Use em sala de aula** para demonstrar componentes React
+2. **Mostre a separação** entre `index.tsx` e `App.tsx`
+3. **Explique o uso** de TypeScript em React Native
+4. **Demonstre** a organização de estilos e componentes
 
 ## 🚨 Solução de Problemas
 
@@ -95,4 +102,4 @@ Para problemas ou dúvidas, verifique:
 
 ---
 
-**Aproveite o Boer App com TypeScript! 🎉**
+**Aproveite o App AUXILIUM e aprenda React Native! 💝🚀**

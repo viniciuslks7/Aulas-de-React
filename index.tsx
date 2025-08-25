@@ -1,5 +1,5 @@
 import { registerRootComponent } from 'expo';
 import App from './App';
 
-// Registra o componente raiz da aplicação
+// Ponto de entrada da aplicação
 registerRootComponent(App);
