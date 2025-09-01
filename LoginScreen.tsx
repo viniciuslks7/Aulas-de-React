@@ -57,6 +57,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Indicador de handle para arrastar */}
+      <View style={styles.handle} />
+      
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
@@ -171,6 +174,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1E5E3F',
   },
+  handle: {
+    width: 60,
+    height: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginTop: 15,
+    marginBottom: 10,
+  },
   keyboardAvoidingView: {
     flex: 1,
   },
@@ -205,7 +217,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: height * 0.06, // Aumentei para baixar mais a logo
+    marginTop: height * 0.06,
   },
   logoImage: {
     width: width * 0.2,
@@ -222,13 +234,13 @@ const styles = StyleSheet.create({
   formCard: {
     flex: 1,
     backgroundColor: 'white',
-    marginTop: height * 0.04, // Reduzi o espaçamento superior
+    marginTop: height * 0.04,
     marginHorizontal: width * 0.05,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: width * 0.08,
     paddingTop: height * 0.04,
-    paddingBottom: height * 0.03, // Aumentei um pouco o padding inferior
+    paddingBottom: height * 0.03,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -5 },
     shadowOpacity: 0.15,

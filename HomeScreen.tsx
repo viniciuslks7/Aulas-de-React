@@ -16,7 +16,6 @@ import Animated, {
   withSpring,
   Easing 
 } from 'react-native-reanimated';
-import { useButtonPressAnimation } from './AnimatedTransition';
 
 const { width, height } = Dimensions.get('window');
 
@@ -25,13 +24,11 @@ interface HomeScreenProps {
 }
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const cadastroAnimation = useButtonPressAnimation();
-  const loginAnimation = useButtonPressAnimation();
-  const doadorAnimation = useButtonPressAnimation();
-
-  // Animações de entrada
+  // Animações de entrada melhoradas
+  const backgroundOpacity = useSharedValue(0);
   const logoOpacity = useSharedValue(0);
-  const logoScale = useSharedValue(0.5);
+  const logoScale = useSharedValue(0.45); // Começa do tamanho que termina na SplashScreen
+  const logoTranslateY = useSharedValue(-height * 0.50); // Começa da posição da SplashScreen
   const titleOpacity = useSharedValue(0);
   const titleTranslateY = useSharedValue(50);
   const taglineOpacity = useSharedValue(0);
@@ -39,22 +36,52 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const buttonsTranslateY = useSharedValue(100);
 
   useEffect(() => {
-    // Sequência de animações de entrada
-    logoOpacity.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.quad) });
-    logoScale.value = withSpring(1, { damping: 15, stiffness: 150 });
+    // Sequência de animações sincronizada com a SplashScreen
     
-    titleOpacity.value = withDelay(300, withTiming(1, { duration: 600 }));
-    titleTranslateY.value = withDelay(300, withSpring(0, { damping: 15, stiffness: 150 }));
+    // 1. Fundo aparece suavemente
+    backgroundOpacity.value = withTiming(1, { 
+      duration: 400, 
+      easing: Easing.bezier(0.25, 0.46, 0.45, 0.94) 
+    });
     
-    taglineOpacity.value = withDelay(600, withTiming(1, { duration: 500 }));
+    // 2. Logo cresce e se move para a posição final (continuando da SplashScreen)
+    logoOpacity.value = withDelay(100, withTiming(1, { 
+      duration: 500, 
+      easing: Easing.out(Easing.quad) 
+    }));
+    logoScale.value = withDelay(100, withSpring(1, { 
+      damping: 15, 
+      stiffness: 120,
+      mass: 1.2 
+    }));
+    logoTranslateY.value = withDelay(100, withSpring(0, { 
+      damping: 18, 
+      stiffness: 100,
+      mass: 1.5 
+    }));
     
-    buttonsOpacity.value = withDelay(900, withTiming(1, { duration: 600 }));
-    buttonsTranslateY.value = withDelay(900, withSpring(0, { damping: 20, stiffness: 100 }));
+    // 3. Título aparece
+    titleOpacity.value = withDelay(500, withTiming(1, { duration: 600 }));
+    titleTranslateY.value = withDelay(500, withSpring(0, { damping: 15, stiffness: 150 }));
+    
+    // 4. Tagline aparece
+    taglineOpacity.value = withDelay(800, withTiming(1, { duration: 500 }));
+    
+    // 5. Botões aparecem
+    buttonsOpacity.value = withDelay(1100, withTiming(1, { duration: 600 }));
+    buttonsTranslateY.value = withDelay(1100, withSpring(0, { damping: 20, stiffness: 100 }));
   }, []);
+
+  const backgroundAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: backgroundOpacity.value,
+  }));
 
   const logoAnimatedStyle = useAnimatedStyle(() => ({
     opacity: logoOpacity.value,
-    transform: [{ scale: logoScale.value }],
+    transform: [
+      { scale: logoScale.value },
+      { translateY: logoTranslateY.value }
+    ],
   }));
 
   const titleAnimatedStyle = useAnimatedStyle(() => ({
@@ -84,71 +111,58 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Conteúdo Central */}
-      <View style={styles.content}>
-        {/* Logo/Ícone */}
-        <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
-          <Image 
-            source={require('./assets/logo.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-        </Animated.View>
-
-        {/* Título */}
-        <Animated.Text style={[styles.title, titleAnimatedStyle]}>
-          AUXILIUM
-        </Animated.Text>
-        
-        {/* Tagline */}
-        <Animated.Text style={[styles.tagline, taglineAnimatedStyle]}>
-          Coragem para se doar, num mundo em que só se pensa em receber...
-        </Animated.Text>
-
-        {/* Botões */}
-        <Animated.View style={[styles.buttonContainer, buttonsAnimatedStyle]}>
-          <Animated.View style={cadastroAnimation.animatedStyle}>
-            <TouchableOpacity 
-              style={styles.button}
-              onPress={handleCadastro}
-              onPressIn={cadastroAnimation.onPressIn}
-              onPressOut={cadastroAnimation.onPressOut}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.buttonText}>CADASTRE-SE</Text>
-            </TouchableOpacity>
+    <Animated.View style={[styles.container, backgroundAnimatedStyle]}>
+      <SafeAreaView style={styles.content}>
+        {/* Conteúdo Central */}
+        <View style={styles.content}>
+          {/* Logo/Ícone */}
+          <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
+            <Image 
+              source={require('./assets/logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </Animated.View>
 
-          <Animated.View style={loginAnimation.animatedStyle}>
-            <TouchableOpacity 
-              style={styles.button}
-              onPress={handleLogin}
-              onPressIn={loginAnimation.onPressIn}
-              onPressOut={loginAnimation.onPressOut}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.buttonText}>LOGIN</Text>
-            </TouchableOpacity>
-          </Animated.View>
+          {/* Título */}
+          <Animated.Text style={[styles.title, titleAnimatedStyle]}>
+            AUXILIUM
+          </Animated.Text>
+          
+          {/* Tagline */}
+          <Animated.Text style={[styles.tagline, taglineAnimatedStyle]}>
+            Coragem para se doar, num mundo em que só se pensa em receber...
+          </Animated.Text>
 
-          <Animated.View style={doadorAnimation.animatedStyle}>
-            <TouchableOpacity 
-              style={styles.button}
-              onPress={handleDoador}
-              onPressIn={doadorAnimation.onPressIn}
-              onPressOut={doadorAnimation.onPressOut}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.buttonText}>SOU UM DOADOR</Text>
-            </TouchableOpacity>
-          </Animated.View>
+          {/* Botões */}
+          <Animated.View style={[styles.buttonContainer, buttonsAnimatedStyle]}>
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={handleCadastro}
+          >
+            <Text style={styles.buttonText}>CADASTRE-SE</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={handleLogin}
+          >
+            <Text style={styles.buttonText}>LOGIN</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={handleDoador}
+          >
+            <Text style={styles.buttonText}>SOU UM DOADOR</Text>
+          </TouchableOpacity>
         </Animated.View>
       </View>
 
       {/* Indicador Home */}
       <View style={styles.homeIndicator} />
     </SafeAreaView>
+    </Animated.View>
   );
 };
 
