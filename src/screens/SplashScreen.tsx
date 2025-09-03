@@ -122,7 +122,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         ]}
       >
         <Image
-          source={require('./assets/logo.png')}
+          source={require('../../assets/logo.png')}
           style={styles.logoImage}
           resizeMode="contain"
         />
@@ -133,7 +133,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
         {/* Ícone de acolhimento fixo no final */}
         <View style={styles.acolhimentoContainer}>
           <Image
-            source={require('./assets/acolhimento-icon.png')}
+            source={require('../../assets/acolhimento-icon.png')}
             style={styles.acolhimentoIcon}
             resizeMode="contain"
           />
@@ -159,7 +159,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
           ]}
         >
           <Image
-            source={require('./assets/iconmoney.png')}
+            source={require('../../assets/iconmoney.png')}
             style={styles.moneyIcon}
             resizeMode="contain"
           />

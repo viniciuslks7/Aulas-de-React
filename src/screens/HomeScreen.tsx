@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   SafeAreaView,
   Image,
-  Dimensions
+  Dimensions,
+  Platform
 } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -99,7 +100,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   }));
 
   const handleCadastro = () => {
-    navigation.navigate('Login');
+    navigation.navigate('UserType');
   };
 
   const handleLogin = () => {
@@ -118,7 +119,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           {/* Logo/Ícone */}
           <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
             <Image 
-              source={require('./assets/logo.png')}
+              source={require('../../assets/logo.png')}
               style={styles.logoImage}
               resizeMode="contain"
             />
@@ -156,6 +157,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           >
             <Text style={styles.buttonText}>SOU UM DOADOR</Text>
           </TouchableOpacity>
+
+          {/* Botão de Teste Rive - Apenas em mobile */}
+          {Platform.OS !== 'web' && (
+            <TouchableOpacity 
+              style={[styles.button, styles.testButton]}
+              onPress={() => (navigation as any).navigate('RiveTest')}
+            >
+              <Text style={[styles.buttonText, styles.testButtonText]}>🎨 TESTE RIVE</Text>
+            </TouchableOpacity>
+          )}
         </Animated.View>
       </View>
 
@@ -180,12 +191,6 @@ const styles = StyleSheet.create({
   logoContainer: {
     marginBottom: height * 0.05, // 5% da altura da tela
     alignItems: 'center',
-    // Sombra sutil para o logo
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
   },
   logoImage: {
     width: width * 0.3, // 30% da largura da tela
@@ -232,6 +237,13 @@ const styles = StyleSheet.create({
     fontSize: Math.min(width * 0.04, 16), // Responsivo
     fontWeight: 'bold',
     textTransform: 'uppercase',
+  },
+  testButton: {
+    backgroundColor: 'rgba(33, 150, 243, 0.9)',
+    borderColor: '#2196F3',
+  },
+  testButtonText: {
+    color: 'white',
   },
   homeIndicator: {
     width: width * 0.35, // 35% da largura

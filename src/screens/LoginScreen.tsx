@@ -46,9 +46,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   const toggleMode = () => {
-    setIsLogin(!isLogin);
-    setEmail('');
-    setPassword('');
+    if (isLogin) {
+      // Se está no modo login e clica em "Cadastre-se", vai para UserTypeScreen
+      navigation.navigate('UserType');
+    } else {
+      // Se está no modo cadastro e clica em "Faça login", volta para o modo login
+      setIsLogin(true);
+      setEmail('');
+      setPassword('');
+    }
   };
 
   const handleBack = () => {
