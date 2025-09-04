@@ -14,16 +14,6 @@ import UserTypeScreen from '../screens/UserTypeScreen';
 import CadUnicoFormScreen from '../screens/CadUnicoFormScreen';
 import SplashScreen from '../screens/SplashScreen';
 
-// Conditional Rive imports (only for mobile platforms)
-let RiveTestScreen: any = null;
-if (Platform.OS !== 'web') {
-  try {
-    RiveTestScreen = require('../screens/RiveTestScreen').default;
-  } catch (error) {
-    console.log('Rive components not available on this platform');
-  }
-}
-
 const Stack = createStackNavigator();
 
 // Transição estilo "Arrastar para cima" - Bottom Sheet
@@ -164,18 +154,6 @@ const AppNavigator: React.FC = () => {
             cardStyle: { backgroundColor: '#1E5E3F' },
           }}
         />
-        
-        {/* Conditional Rive Screen - Only on mobile */}
-        {RiveTestScreen && Platform.OS !== 'web' && (
-          <Stack.Screen 
-            name="RiveTest" 
-            component={RiveTestScreen}
-            options={{
-              ...fadeTransition,
-              cardStyle: { backgroundColor: '#f5f5f5' },
-            }}
-          />
-        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

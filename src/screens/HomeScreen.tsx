@@ -7,7 +7,8 @@ import {
   SafeAreaView,
   Image,
   Dimensions,
-  Platform
+  Platform,
+  ScrollView
 } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -113,9 +114,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <Animated.View style={[styles.container, backgroundAnimatedStyle]}>
-      <SafeAreaView style={styles.content}>
-        {/* Conteúdo Central */}
-        <View style={styles.content}>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          {/* Conteúdo Central */}
+          <View style={styles.content}>
           {/* Logo/Ícone */}
           <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
             <Image 
@@ -157,21 +163,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           >
             <Text style={styles.buttonText}>SOU UM DOADOR</Text>
           </TouchableOpacity>
-
-          {/* Botão de Teste Rive - Apenas em mobile */}
-          {Platform.OS !== 'web' && (
-            <TouchableOpacity 
-              style={[styles.button, styles.testButton]}
-              onPress={() => (navigation as any).navigate('RiveTest')}
-            >
-              <Text style={[styles.buttonText, styles.testButtonText]}>🎨 TESTE RIVE</Text>
-            </TouchableOpacity>
-          )}
         </Animated.View>
       </View>
 
       {/* Indicador Home */}
       <View style={styles.homeIndicator} />
+        </ScrollView>
     </SafeAreaView>
     </Animated.View>
   );
@@ -181,6 +178,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1E5E3F',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,

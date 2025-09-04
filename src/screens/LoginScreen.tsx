@@ -82,7 +82,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             
             <View style={styles.logoContainer}>
               <Image 
-                source={require('./assets/logo.png')}
+                source={require('../../assets/logo.png')}
                 style={styles.logoImage}
                 resizeMode="contain"
               />

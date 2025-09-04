@@ -110,8 +110,11 @@ const CadUnicoFormScreen: React.FC = () => {
 
         <ScrollView 
           style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          bounces={true}
+          scrollEventThrottle={16}
         >
           {/* Logo da aplicação */}
           <Animated.View 
@@ -345,6 +348,10 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: height * 0.1,
   },
   iconContainer: {
     alignItems: 'center',

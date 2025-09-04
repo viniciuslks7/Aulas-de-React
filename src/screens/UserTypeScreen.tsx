@@ -9,6 +9,7 @@ import {
   Modal,
   Animated,
   Image,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
@@ -222,10 +223,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.08,
     paddingRight: width * 0.15, // Espaço para o botão "i"
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0px 6px 12px rgba(0, 0, 0, 0.3)' }
+      : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.3,
+          shadowRadius: 12,
+        }
+    ),
     elevation: 8,
     // Gradiente sutil simulado com sombra interna
     overflow: 'hidden',
@@ -235,9 +241,14 @@ const styles = StyleSheet.create({
     fontSize: Math.min(width * 0.045, 18),
     fontWeight: 'bold',
     letterSpacing: 1.2,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    ...(Platform.OS === 'web' 
+      ? { textShadow: '0px 1px 2px rgba(0, 0, 0, 0.3)' }
+      : {
+          textShadowColor: 'rgba(0, 0, 0, 0.3)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 2,
+        }
+    ),
   },
   infoButton: {
     position: 'absolute',
@@ -252,10 +263,15 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    ...(Platform.OS === 'web'
+      ? { boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.25)' }
+      : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 8,
+        }
+    ),
     elevation: 6,
   },
   infoButtonText: {
