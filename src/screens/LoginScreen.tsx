@@ -13,12 +13,12 @@ import {
   Platform,
   ScrollView
 } from 'react-native';
+import { auth, database } from '../services/connectionFirebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { ref, set } from 'firebase/database';
+import { LoginScreenProps } from '../types/navigation';
 
 const { width, height } = Dimensions.get('window');
-
-interface LoginScreenProps {
-  navigation: any;
-}
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -26,22 +26,70 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    if (isLogin) {
-      if (email && password) {
+  const handleSubmit = async () => {
+    if (!email || !password) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        // Login do usuário
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
         Alert.alert('Sucesso', 'Login realizado com sucesso!');
-        // Aqui você pode adicionar a lógica de autenticação
+        // Navegar para a próxima tela ou home
+        navigation.navigate('Home'); // Ajuste conforme sua navegação
       } else {
-        Alert.alert('Erro', 'Por favor, preencha todos os campos');
-      }
-    } else {
-      if (email && password) {
+        // Cadastro do usuário
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Salvar dados do usuário no Realtime Database
+        const userRef = ref(database, `users/${user.uid}`);
+        await set(userRef, {
+          email: user.email,
+          uid: user.uid,
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString()
+        });
+
         Alert.alert('Sucesso', 'Cadastro realizado com sucesso!');
-        // Aqui você pode adicionar a lógica de cadastro
-      } else {
-        Alert.alert('Erro', 'Por favor, preencha todos os campos');
+        // Navegar para completar o perfil ou home
+        navigation.navigate('UserType'); // Ajuste conforme sua navegação
       }
+    } catch (error: any) {
+      let errorMessage = 'Ocorreu um erro inesperado';
+      
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'Este email já está em uso';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'A senha deve ter pelo menos 6 caracteres';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Email inválido';
+          break;
+        case 'auth/user-not-found':
+          errorMessage = 'Usuário não encontrado';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Senha incorreta';
+          break;
+        case 'auth/invalid-credential':
+          errorMessage = 'Credenciais inválidas';
+          break;
+        default:
+          errorMessage = error.message || 'Erro de autenticação';
+      }
+      
+      Alert.alert('Erro', errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,18 +152,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
             {/* Campos de entrada modernos */}
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>CPF/CNPJ do Usuário</Text>
+              <Text style={styles.inputLabel}>Email</Text>
               <TextInput
                 style={[
                   styles.input,
                   emailFocused && styles.inputFocused
                 ]}
-                placeholder="000.000.000-00"
+                placeholder="seu@email.com"
                 placeholderTextColor="#A0A0A0"
                 value={email}
                 onChangeText={setEmail}
-                keyboardType="numeric"
+                keyboardType="email-address"
                 autoCapitalize="none"
+                autoComplete="email"
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
               />
@@ -140,8 +189,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Botão principal elegante */}
-            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-              <Text style={styles.submitButtonText}>Entrar</Text>
+            <TouchableOpacity 
+              style={[styles.submitButton, loading && styles.submitButtonDisabled]} 
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              <Text style={styles.submitButtonText}>
+                {loading ? 'Aguarde...' : (isLogin ? 'Entrar' : 'Cadastrar')}
+              </Text>
             </TouchableOpacity>
 
             {/* Link para recuperar senha */}
@@ -307,6 +362,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#A0A0A0',
+    shadowOpacity: 0.1,
+    elevation: 2,
   },
   submitButtonText: {
     color: 'white',

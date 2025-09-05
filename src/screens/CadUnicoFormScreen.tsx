@@ -12,17 +12,26 @@ import {
   Platform,
   Animated,
   Image,
+  Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { CadUnicoFormScreenProps } from '../types/navigation';
+import { usuarioService, Usuario } from '../services/databaseService';
 
 const { width, height } = Dimensions.get('window');
 
-const CadUnicoFormScreen: React.FC = () => {
-  const navigation = useNavigation();
+const CadUnicoFormScreen: React.FC<CadUnicoFormScreenProps> = ({ navigation }) => {
   
   // Estados do formulário
   const [nomeCompleto, setNomeCompleto] = useState('');
+  const [email, setEmail] = useState('');
+  const [telefone, setTelefone] = useState('');
   const [endereco, setEndereco] = useState('');
+  const [cep, setCep] = useState('');
+  const [cidade, setCidade] = useState('');
+  const [estado, setEstado] = useState('');
+  const [nis, setNis] = useState('');
+  const [renda, setRenda] = useState('');
+  const [membros, setMembros] = useState('');
   const [idade, setIdade] = useState('');
   const [categorias, setCategorias] = useState({
     pix: false,
@@ -31,10 +40,181 @@ const CadUnicoFormScreen: React.FC = () => {
     agasalhos: false,
   });
   const [relato, setRelato] = useState('');
+  const [carregando, setCarregando] = useState(false);
+
+  // Funções de validação com regex
+  const validacoes = {
+    // Nome completo: apenas letras, espaços, acentos
+    nomeCompleto: (nome: string): boolean => {
+      const regex = /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]{2,}$/;
+      return regex.test(nome.trim()) && nome.trim().split(' ').length >= 2;
+    },
+
+    // Email: formato padrão RFC 5322 simplificado
+    email: (email: string): boolean => {
+      const regex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+      return regex.test(email.trim());
+    },
+
+    // Telefone: formato brasileiro (11) 99999-9999 ou variações
+    telefone: (telefone: string): boolean => {
+      const regex = /^(?:\+55\s?)?(?:\(?[1-9]{2}\)?\s?)?(?:9\s?)?[0-9]{4}-?[0-9]{4}$/;
+      const somenteNumeros = telefone.replace(/\D/g, '');
+      return regex.test(telefone) && (somenteNumeros.length === 10 || somenteNumeros.length === 11);
+    },
+
+    // CEP: formato brasileiro 00000-000
+    cep: (cep: string): boolean => {
+      const regex = /^[0-9]{5}-?[0-9]{3}$/;
+      return regex.test(cep);
+    },
+
+    // Cidade: apenas letras, espaços, acentos, hífens
+    cidade: (cidade: string): boolean => {
+      const regex = /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s\-]{2,}$/;
+      return regex.test(cidade.trim());
+    },
+
+    // Estado: apenas letras, 2 caracteres (sigla) ou nome completo
+    estado: (estado: string): boolean => {
+      const siglaRegex = /^[A-Z]{2}$/;
+      const nomeRegex = /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s]{4,}$/;
+      return siglaRegex.test(estado.trim()) || nomeRegex.test(estado.trim());
+    },
+
+    // NIS: 11 dígitos numéricos
+    nis: (nis: string): boolean => {
+      const regex = /^[0-9]{11}$/;
+      const somenteNumeros = nis.replace(/\D/g, '');
+      return regex.test(somenteNumeros);
+    },
+
+    // Renda: números decimais com até 2 casas
+    renda: (renda: string): boolean => {
+      const regex = /^[0-9]+(?:\.[0-9]{1,2})?$/;
+      const valor = parseFloat(renda);
+      return regex.test(renda) && valor >= 0 && valor <= 999999.99;
+    },
+
+    // Membros: número inteiro de 1 a 20
+    membros: (membros: string): boolean => {
+      const regex = /^[1-9][0-9]?$/;
+      const numero = parseInt(membros);
+      return regex.test(membros) && numero >= 1 && numero <= 20;
+    },
+
+    // Idade: número inteiro de 0 a 120
+    idade: (idade: string): boolean => {
+      const regex = /^[0-9]{1,3}$/;
+      const numero = parseInt(idade);
+      return regex.test(idade) && numero >= 0 && numero <= 120;
+    },
+
+    // Endereço: letras, números, espaços, vírgulas, pontos, hífens
+    endereco: (endereco: string): boolean => {
+      const regex = /^[a-zA-ZÀ-ÿ\u00f1\u00d1\s0-9,.\-\/]{5,}$/;
+      return regex.test(endereco.trim());
+    }
+  };
+
+  // Função para validar todos os campos
+  const validarCampos = (): { valido: boolean; mensagem: string } => {
+    // Verificar se alguma categoria foi selecionada
+    const algumaCategoriaSecionada = Object.values(categorias).some(cat => cat);
+    
+    // Validações obrigatórias
+    if (!nomeCompleto.trim()) {
+      return { valido: false, mensagem: 'Nome completo é obrigatório' };
+    }
+    if (!validacoes.nomeCompleto(nomeCompleto)) {
+      return { valido: false, mensagem: 'Nome completo deve ter pelo menos nome e sobrenome, apenas letras' };
+    }
+
+    if (!email.trim()) {
+      return { valido: false, mensagem: 'Email é obrigatório' };
+    }
+    if (!validacoes.email(email)) {
+      return { valido: false, mensagem: 'Email deve ter um formato válido (exemplo@dominio.com)' };
+    }
+
+    if (!telefone.trim()) {
+      return { valido: false, mensagem: 'Telefone é obrigatório' };
+    }
+    if (!validacoes.telefone(telefone)) {
+      return { valido: false, mensagem: 'Telefone deve ter formato brasileiro (11) 99999-9999' };
+    }
+
+    if (!endereco.trim()) {
+      return { valido: false, mensagem: 'Endereço é obrigatório' };
+    }
+    if (!validacoes.endereco(endereco)) {
+      return { valido: false, mensagem: 'Endereço deve ter pelo menos 5 caracteres válidos' };
+    }
+
+    if (!cep.trim()) {
+      return { valido: false, mensagem: 'CEP é obrigatório' };
+    }
+    if (!validacoes.cep(cep)) {
+      return { valido: false, mensagem: 'CEP deve ter formato 00000-000' };
+    }
+
+    if (!cidade.trim()) {
+      return { valido: false, mensagem: 'Cidade é obrigatória' };
+    }
+    if (!validacoes.cidade(cidade)) {
+      return { valido: false, mensagem: 'Cidade deve conter apenas letras' };
+    }
+
+    if (!estado.trim()) {
+      return { valido: false, mensagem: 'Estado é obrigatório' };
+    }
+    if (!validacoes.estado(estado)) {
+      return { valido: false, mensagem: 'Estado deve ser uma sigla (SP) ou nome completo' };
+    }
+
+    if (!nis.trim()) {
+      return { valido: false, mensagem: 'NIS é obrigatório' };
+    }
+    if (!validacoes.nis(nis)) {
+      return { valido: false, mensagem: 'NIS deve ter exatamente 11 dígitos' };
+    }
+
+    if (!renda.trim()) {
+      return { valido: false, mensagem: 'Renda é obrigatória' };
+    }
+    if (!validacoes.renda(renda)) {
+      return { valido: false, mensagem: 'Renda deve ser um valor válido (exemplo: 1500.00)' };
+    }
+
+    if (!membros.trim()) {
+      return { valido: false, mensagem: 'Número de membros é obrigatório' };
+    }
+    if (!validacoes.membros(membros)) {
+      return { valido: false, mensagem: 'Número de membros deve ser entre 1 e 20' };
+    }
+
+    if (idade.trim() && !validacoes.idade(idade)) {
+      return { valido: false, mensagem: 'Idade deve ser um número entre 0 e 120' };
+    }
+
+    if (!algumaCategoriaSecionada) {
+      return { valido: false, mensagem: 'Selecione pelo menos um tipo de doação' };
+    }
+
+    return { valido: true, mensagem: '' };
+  };
   
   // Estados de foco dos inputs
   const [nomeCompletoFocused, setNomeCompletoFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [telefoneFocused, setTelefoneFocused] = useState(false);
   const [enderecoFocused, setEnderecoFocused] = useState(false);
+  const [cepFocused, setCepFocused] = useState(false);
+  const [cidadeFocused, setCidadeFocused] = useState(false);
+  const [estadoFocused, setEstadoFocused] = useState(false);
+  const [nisFocused, setNisFocused] = useState(false);
+  const [rendaFocused, setRendaFocused] = useState(false);
+  const [membrosFocused, setMembrosFocused] = useState(false);
   const [idadeFocused, setIdadeFocused] = useState(false);
   const [relatoFocused, setRelatoFocused] = useState(false);
 
@@ -58,29 +238,126 @@ const CadUnicoFormScreen: React.FC = () => {
   }, []);
 
   const handleBack = () => {
-    (navigation as any).goBack();
+    navigation.goBack();
   };
 
-  const handleSeguir = () => {
-    // Validação básica - pelo menos uma categoria deve ser selecionada
-    const algumaCategoriaSecionada = Object.values(categorias).some(cat => cat);
+  const handleSeguir = async () => {
+    // Validação com regex
+    const { valido, mensagem } = validarCampos();
     
-    if (!nomeCompleto || !endereco || !idade || !algumaCategoriaSecionada || !relato) {
-      alert('Por favor, preencha todos os campos obrigatórios e selecione ao menos um tipo de doação.');
+    if (!valido) {
+      Alert.alert('Erro de Validação', mensagem);
       return;
     }
-    
-    // Navegar para próxima tela do formulário
-    console.log('Dados coletados:', {
-      nomeCompleto,
-      endereco,
-      idade,
-      categorias,
-      relato,
-    });
-    
-    // TODO: Navegar para próxima parte do formulário
-    alert('Primeira parte do cadastro concluída!');
+
+    setCarregando(true);
+
+    try {
+      // Preparar dados para o Firebase
+      const dadosUsuario: Omit<Usuario, 'id' | 'criadoEm'> = {
+        nome: nomeCompleto.trim(),
+        email: email.toLowerCase().trim(),
+        telefone: telefone.replace(/\D/g, ''), // Remove caracteres não numéricos
+        tipo: 'beneficiario',
+        endereco: {
+          cep: cep.replace(/\D/g, ''), // Remove caracteres não numéricos
+          rua: endereco.trim(),
+          numero: '0', // Campo pode ser adicionado depois
+          bairro: 'Centro', // Campo pode ser adicionado depois  
+          cidade: cidade.trim(),
+          estado: estado.trim().toUpperCase()
+        },
+        cadUnico: {
+          nis: nis.replace(/\D/g, ''), // Remove caracteres não numéricos
+          renda: parseFloat(renda) || 0,
+          membros: parseInt(membros) || 1
+        },
+        ativo: true
+      };
+
+      // Verificar se usuário já existe
+      const usuarioExistente = await usuarioService.buscarPorEmail(email.toLowerCase().trim());
+      if (usuarioExistente) {
+        Alert.alert(
+          'Email já cadastrado',
+          'Este email já está cadastrado no sistema.'
+        );
+        setCarregando(false);
+        return;
+      }
+
+      // Criar usuário no Firebase
+      const userId = await usuarioService.criar(dadosUsuario);
+      
+      console.log('✅ Usuário cadastrado com sucesso! ID:', userId);
+      
+      Alert.alert(
+        'Primeira Etapa Concluída!',
+        'Agora vamos completar algumas informações adicionais.',
+        [
+          {
+            text: 'Continuar',
+            onPress: () => {
+              // Navegar para a segunda parte do formulário
+              navigation.navigate('CadUnicoForm2');
+            }
+          }
+        ]
+      );
+
+    } catch (error) {
+      console.error('❌ Erro ao cadastrar usuário:', error);
+      Alert.alert(
+        'Erro no cadastro',
+        'Ocorreu um erro ao salvar seus dados. Tente novamente.'
+      );
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  // Funções de formatação automática
+  const formatadores = {
+    telefone: (value: string) => {
+      const apenasNumeros = value.replace(/\D/g, '');
+      if (apenasNumeros.length <= 2) return apenasNumeros;
+      if (apenasNumeros.length <= 6) return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2)}`;
+      if (apenasNumeros.length <= 10) return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 7)}-${apenasNumeros.slice(7)}`;
+      return `(${apenasNumeros.slice(0, 2)}) ${apenasNumeros.slice(2, 7)}-${apenasNumeros.slice(7, 11)}`;
+    },
+
+    cep: (value: string) => {
+      const apenasNumeros = value.replace(/\D/g, '');
+      if (apenasNumeros.length <= 5) return apenasNumeros;
+      return `${apenasNumeros.slice(0, 5)}-${apenasNumeros.slice(5, 8)}`;
+    },
+
+    nis: (value: string) => {
+      return value.replace(/\D/g, '').slice(0, 11);
+    },
+
+    renda: (value: string) => {
+      // Remove caracteres não numéricos exceto ponto
+      let limpo = value.replace(/[^\d.]/g, '');
+      // Garante apenas um ponto decimal
+      const partes = limpo.split('.');
+      if (partes.length > 2) {
+        limpo = partes[0] + '.' + partes.slice(1).join('');
+      }
+      // Limita casas decimais a 2
+      if (partes[1] && partes[1].length > 2) {
+        limpo = partes[0] + '.' + partes[1].slice(0, 2);
+      }
+      return limpo;
+    },
+
+    membros: (value: string) => {
+      return value.replace(/\D/g, '').slice(0, 2);
+    },
+
+    idade: (value: string) => {
+      return value.replace(/\D/g, '').slice(0, 3);
+    }
   };
 
   const toggleCategory = (categoryKey: keyof typeof categorias) => {
@@ -92,29 +369,37 @@ const CadUnicoFormScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Formulário</Text>
+      </View>
+
+      {/* Separador */}
+      <View style={styles.separator} />
+
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        enabled={Platform.OS === 'ios'}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <Text style={styles.backButtonText}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Formulário</Text>
-        </View>
-
-        {/* Separador */}
-        <View style={styles.separator} />
-
         <ScrollView 
           style={styles.scrollContainer}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
           keyboardShouldPersistTaps="handled"
           bounces={true}
           scrollEventThrottle={16}
+          nestedScrollEnabled={true}
+          alwaysBounceVertical={true}
+          indicatorStyle="white"
+          scrollEnabled={true}
+          removeClippedSubviews={false}
+          overScrollMode="always"
+          contentInsetAdjustmentBehavior="automatic"
         >
           {/* Logo da aplicação */}
           <Animated.View 
@@ -191,11 +476,153 @@ const CadUnicoFormScreen: React.FC = () => {
                 placeholder="Idade"
                 placeholderTextColor="#999"
                 value={idade}
-                onChangeText={setIdade}
+                onChangeText={(text) => setIdade(formatadores.idade(text))}
                 keyboardType="numeric"
                 maxLength={3}
                 onFocus={() => setIdadeFocused(true)}
                 onBlur={() => setIdadeFocused(false)}
+              />
+            </View>
+
+            {/* Campo Email */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  emailFocused && styles.inputFocused
+                ]}
+                placeholder="Email"
+                placeholderTextColor="#999"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
+              />
+            </View>
+
+            {/* Campo Telefone */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  telefoneFocused && styles.inputFocused
+                ]}
+                placeholder="Telefone (11) 99999-9999"
+                placeholderTextColor="#999"
+                value={telefone}
+                onChangeText={(text) => setTelefone(formatadores.telefone(text))}
+                keyboardType="phone-pad"
+                maxLength={15}
+                onFocus={() => setTelefoneFocused(true)}
+                onBlur={() => setTelefoneFocused(false)}
+              />
+            </View>
+
+            {/* Campo CEP */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  cepFocused && styles.inputFocused
+                ]}
+                placeholder="CEP 00000-000"
+                placeholderTextColor="#999"
+                value={cep}
+                onChangeText={(text) => setCep(formatadores.cep(text))}
+                keyboardType="numeric"
+                maxLength={9}
+                onFocus={() => setCepFocused(true)}
+                onBlur={() => setCepFocused(false)}
+              />
+            </View>
+
+            {/* Campo Cidade */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  cidadeFocused && styles.inputFocused
+                ]}
+                placeholder="Cidade"
+                placeholderTextColor="#999"
+                value={cidade}
+                onChangeText={setCidade}
+                autoCapitalize="words"
+                onFocus={() => setCidadeFocused(true)}
+                onBlur={() => setCidadeFocused(false)}
+              />
+            </View>
+
+            {/* Campo Estado */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  estadoFocused && styles.inputFocused
+                ]}
+                placeholder="Estado (SP ou São Paulo)"
+                placeholderTextColor="#999"
+                value={estado}
+                onChangeText={setEstado}
+                autoCapitalize="characters"
+                onFocus={() => setEstadoFocused(true)}
+                onBlur={() => setEstadoFocused(false)}
+              />
+            </View>
+
+            {/* Campo NIS */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  nisFocused && styles.inputFocused
+                ]}
+                placeholder="NIS (11 dígitos)"
+                placeholderTextColor="#999"
+                value={nis}
+                onChangeText={(text) => setNis(formatadores.nis(text))}
+                keyboardType="numeric"
+                maxLength={11}
+                onFocus={() => setNisFocused(true)}
+                onBlur={() => setNisFocused(false)}
+              />
+            </View>
+
+            {/* Campo Renda */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  rendaFocused && styles.inputFocused
+                ]}
+                placeholder="Renda Familiar (R$ 0000.00)"
+                placeholderTextColor="#999"
+                value={renda}
+                onChangeText={(text) => setRenda(formatadores.renda(text))}
+                keyboardType="decimal-pad"
+                onFocus={() => setRendaFocused(true)}
+                onBlur={() => setRendaFocused(false)}
+              />
+            </View>
+
+            {/* Campo Membros */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  membrosFocused && styles.inputFocused
+                ]}
+                placeholder="Número de Membros da Família"
+                placeholderTextColor="#999"
+                value={membros}
+                onChangeText={(text) => setMembros(formatadores.membros(text))}
+                keyboardType="numeric"
+                maxLength={2}
+                onFocus={() => setMembrosFocused(true)}
+                onBlur={() => setMembrosFocused(false)}
               />
             </View>
 
@@ -297,8 +724,14 @@ const CadUnicoFormScreen: React.FC = () => {
             </View>
 
             {/* Botão Seguir */}
-            <TouchableOpacity style={styles.seguirButton} onPress={handleSeguir}>
-              <Text style={styles.seguirButtonText}>Seguir</Text>
+            <TouchableOpacity 
+              style={[styles.seguirButton, carregando && styles.seguirButtonDisabled]} 
+              onPress={handleSeguir}
+              disabled={carregando}
+            >
+              <Text style={styles.seguirButtonText}>
+                {carregando ? 'Salvando...' : 'Cadastrar'}
+              </Text>
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>
@@ -348,10 +781,18 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+    width: '100%',
+    height: '100%',
+    ...(Platform.OS === 'web' && {
+      overflow: 'auto' as any,
+      WebkitOverflowScrolling: 'touch' as any,
+      cursor: 'grab' as any,
+    }),
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: height * 0.1,
+    paddingBottom: height * 0.15,
+    minHeight: height * 1.5,
   },
   iconContainer: {
     alignItems: 'center',
@@ -392,7 +833,6 @@ const styles = StyleSheet.create({
     borderRadius: width * 0.03,
   },
   formContainer: {
-    flex: 1,
     backgroundColor: '#A8D5BA',
     marginHorizontal: width * 0.05,
     borderTopLeftRadius: 20,
@@ -400,7 +840,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.06,
     paddingTop: height * 0.03,
     paddingBottom: height * 0.04,
-    minHeight: height * 0.7,
   },
   sectionTitle: {
     fontSize: Math.min(width * 0.06, 24),
@@ -538,6 +977,10 @@ const styles = StyleSheet.create({
     fontSize: Math.min(width * 0.045, 18),
     fontWeight: 'bold',
     letterSpacing: 1,
+  },
+  seguirButtonDisabled: {
+    backgroundColor: '#ccc',
+    shadowOpacity: 0.1,
   },
 });
 

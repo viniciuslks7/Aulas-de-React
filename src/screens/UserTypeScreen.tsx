@@ -11,12 +11,11 @@ import {
   Image,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { UserTypeScreenProps } from '../types/navigation';
 
 const { width, height } = Dimensions.get('window');
 
-const UserTypeScreen: React.FC = () => {
-  const navigation = useNavigation();
+const UserTypeScreen: React.FC<UserTypeScreenProps> = ({ navigation }) => {
   const [showTooltip, setShowTooltip] = useState<'cad' | 'instituicao' | null>(null);
   
   // Animações

@@ -9,22 +9,22 @@ src/
 │   ├── LoginScreen.tsx
 │   ├── SplashScreen.tsx
 │   ├── UserTypeScreen.tsx
-│   ├── CadUnicoFormScreen.tsx
-│   ├── RiveTestScreen.tsx (mobile only)
-│   └── SplashScreenWithRive.tsx
-├── components/        # Componentes reutilizáveis
-│   ├── RiveAnimationExample.tsx
-│   ├── RiveButton.tsx
-│   └── RiveSplashAnimation.tsx
+│   └── CadUnicoFormScreen.tsx
+├── services/          # Serviços e conexões de banco
+│   ├── connectionFirebase.tsx
+│   └── databaseService.tsx
 └── navigation/        # Configuração de navegação
     └── AppNavigator.tsx
 
 assets/
-├── animations/        # Arquivos .riv
 ├── *.png             # Imagens e ícones
-└── README.md
+
+docs/
+├── PROJECT_STRUCTURE.md
+└── ANIMATIONS_GUIDE.md
 
 App.tsx               # Ponto de entrada principal
+.env.example          # Exemplo de variáveis de ambiente
 ```
 
 ## ✅ Problemas Resolvidos

@@ -18,12 +18,9 @@ import Animated, {
   withSpring,
   Easing 
 } from 'react-native-reanimated';
+import { HomeScreenProps } from '../types/navigation';
 
 const { width, height } = Dimensions.get('window');
-
-interface HomeScreenProps {
-  navigation: any;
-}
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   // Animações de entrada melhoradas

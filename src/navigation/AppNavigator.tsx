@@ -6,15 +6,17 @@ import {
   StackCardInterpolationProps 
 } from '@react-navigation/stack';
 import { Platform, Easing } from 'react-native';
+import { RootStackParamList } from '../types/navigation';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import UserTypeScreen from '../screens/UserTypeScreen';
 import CadUnicoFormScreen from '../screens/CadUnicoFormScreen';
+import CadUnicoForm2Screen from '../screens/CadUnicoForm2Screen';
 import SplashScreen from '../screens/SplashScreen';
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
 
 // Transição estilo "Arrastar para cima" - Bottom Sheet
 const bottomSheetTransition = {
@@ -149,6 +151,14 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen 
           name="CadUnicoForm" 
           component={CadUnicoFormScreen}
+          options={{
+            ...fadeTransition,
+            cardStyle: { backgroundColor: '#1E5E3F' },
+          }}
+        />
+        <Stack.Screen 
+          name="CadUnicoForm2" 
+          component={CadUnicoForm2Screen}
           options={{
             ...fadeTransition,
             cardStyle: { backgroundColor: '#1E5E3F' },
