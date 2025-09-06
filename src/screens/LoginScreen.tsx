@@ -41,8 +41,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         // Login do usuário
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         Alert.alert('Sucesso', 'Login realizado com sucesso!');
-        // Navegar para a próxima tela ou home
-        navigation.navigate('Home'); // Ajuste conforme sua navegação
+        // Navegar para a tela principal após login
+        navigation.navigate('MainScreen');
       } else {
         // Cadastro do usuário
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);

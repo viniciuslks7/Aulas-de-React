@@ -14,7 +14,9 @@ import LoginScreen from '../screens/LoginScreen';
 import UserTypeScreen from '../screens/UserTypeScreen';
 import CadUnicoFormScreen from '../screens/CadUnicoFormScreen';
 import CadUnicoForm2Screen from '../screens/CadUnicoForm2Screen';
+import MainScreen from '../screens/MainScreen';
 import SplashScreen from '../screens/SplashScreen';
+import FirebaseTestScreen from '../screens/FirebaseTestScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -162,6 +164,23 @@ const AppNavigator: React.FC = () => {
           options={{
             ...fadeTransition,
             cardStyle: { backgroundColor: '#1E5E3F' },
+          }}
+        />
+        <Stack.Screen 
+          name="MainScreen" 
+          component={MainScreen}
+          options={{
+            ...fadeTransition,
+            cardStyle: { backgroundColor: '#1E5E3F' },
+          }}
+        />
+        <Stack.Screen 
+          name="FirebaseTest" 
+          component={FirebaseTestScreen}
+          options={{
+            ...fadeTransition,
+            cardStyle: { backgroundColor: '#1E5E3F' },
+            title: 'Firebase Test'
           }}
         />
       </Stack.Navigator>

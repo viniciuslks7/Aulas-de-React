@@ -15,10 +15,29 @@ import {
   Alert,
 } from 'react-native';
 import { CadUnicoForm2ScreenProps } from '../types/navigation';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, addDoc } from 'firebase/firestore';
+import { auth, db } from '../services/connectionFirebase';
+import { testFirebaseConnection, debugCurrentUser } from '../services/firebaseDebug';
 
 const { width, height } = Dimensions.get('window');
 
-const CadUnicoForm2Screen: React.FC<CadUnicoForm2ScreenProps> = ({ navigation }) => {
+const CadUnicoForm2Screen: React.FC<CadUnicoForm2ScreenProps> = ({ navigation, route }) => {
+  
+  // Dados recebidos da tela anterior
+  const dadosFormulario = route.params?.dadosFormulario;
+  
+  useEffect(() => {
+    console.log('🔵 CadUnicoForm2Screen - ComponentDidMount');
+    console.log('🔵 Route params recebidos:', route.params);
+    console.log('🔵 dadosFormulario extraído:', dadosFormulario);
+    
+    if (dadosFormulario) {
+      console.log('✅ Dados recebidos da primeira tela:', dadosFormulario);
+    } else {
+      console.log('❌ ATENÇÃO: Nenhum dado foi recebido da primeira tela!');
+    }
+  }, [dadosFormulario]);
   
   // Estados do formulário
   const [rg, setRg] = useState('');
@@ -183,47 +202,138 @@ const CadUnicoForm2Screen: React.FC<CadUnicoForm2ScreenProps> = ({ navigation })
   };
 
   const handleConcluir = async () => {
+    console.log('🔵 INÍCIO - handleConcluir chamado');
+    console.log('🔵 Dados recebidos da primeira tela:', dadosFormulario);
+    console.log('🔵 Estado atual dos campos da segunda tela:', {
+      rg,
+      cpf,
+      chavePix,
+      telefone,
+      email,
+      senha: senha ? '[PREENCHIDA]' : '[VAZIA]',
+      confirmarSenha: confirmarSenha ? '[PREENCHIDA]' : '[VAZIA]'
+    });
+
+    // Debug do usuário atual antes de iniciar
+    debugCurrentUser();
+
     // Validação com regex
     const { valido, mensagem } = validarCampos();
+    console.log('🔵 Resultado da validação:', { valido, mensagem });
     
     if (!valido) {
+      console.log('❌ Validação falhou:', mensagem);
       Alert.alert('Erro de Validação', mensagem);
       return;
     }
 
+    console.log('✅ Validação passou, executando teste completo do Firebase...');
     setCarregando(true);
 
     try {
-      // Aqui você pode salvar os dados adicionais ou finalizar o cadastro
-      console.log('✅ Formulário 1.2 concluído!', {
+      // Primeiro: teste completo do Firebase
+      console.log('🧪 Executando teste completo do Firebase...');
+      const testResult = await testFirebaseConnection();
+      
+      if (testResult && !testResult.success) {
+        console.error('❌ Teste do Firebase falhou:', testResult.error);
+        Alert.alert('Erro de Configuração', 'Problema na configuração do Firebase. Tente novamente.');
+        return;
+      }
+      
+      console.log('✅ Teste do Firebase passou! Procedendo com cadastro real...');
+
+      // Dados completos do usuário para salvar no Firebase
+      const dadosCompletos = {
+        // Dados da primeira tela
+        ...dadosFormulario,
+        // Dados da segunda tela
         rg: rg.replace(/\D/g, ''),
         cpf: cpf.replace(/\D/g, ''),
         chavePix,
         telefone: telefone.replace(/\D/g, ''),
         email: email.toLowerCase().trim(),
-        senha // Em produção, nunca logue a senha
+        // Metadados
+        dataCadastro: new Date().toISOString(),
+        status: 'ativo',
+        tipo: 'beneficiario'
+      };
+
+      console.log('🔵 Dados completos preparados para Firebase:', {
+        ...dadosCompletos,
+        senha: '[PROTEGIDA]'
       });
+
+      console.log('✅ Iniciando cadastro real no Firebase...');
+      
+      // 1. Criar usuário no Firebase Authentication
+      console.log('🔵 Chamando createUserWithEmailAndPassword...');
+      console.log('🔵 Email:', email);
+      console.log('🔵 Senha length:', senha?.length || 0);
+      
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+      const uid = userCredential.user.uid;
+      
+      console.log('✅ Usuário criado no Authentication com UID:', uid);
+      
+      // 2. Salvar dados completos no Firestore
+      console.log('🔵 Salvando no Firestore...');
+      
+      // Adicionar o UID aos dados antes de salvar
+      const dadosComUID = {
+        ...dadosCompletos,
+        uid: uid,
+        criadoEm: new Date().toISOString(),
+        status: 'ativo'
+      };
+      
+      console.log('🔵 Dados com UID para Firestore:', dadosComUID);
+      
+      const docRef = await addDoc(collection(db, 'usuarios'), dadosComUID);
+      
+      console.log('✅ Dados salvos no Firestore com sucesso! Document ID:', docRef.id);
       
       Alert.alert(
         'Cadastro Concluído!',
-        'Seu cadastro foi finalizado com sucesso. Agora você pode receber doações.',
+        'Seu cadastro foi finalizado com sucesso. Faça login para acessar sua conta.',
         [
           {
-            text: 'OK',
+            text: 'Fazer Login',
             onPress: () => {
-              navigation.navigate('Home');
+              navigation.navigate('Login');
             }
           }
         ]
       );
 
-    } catch (error) {
-      console.error('❌ Erro ao finalizar cadastro:', error);
-      Alert.alert(
-        'Erro',
-        'Ocorreu um erro ao finalizar seu cadastro. Tente novamente.'
-      );
+    } catch (error: any) {
+      console.error('❌ ERRO DETALHADO:', error);
+      console.error('❌ Código do erro:', error.code);
+      console.error('❌ Mensagem do erro:', error.message);
+      console.error('❌ Stack do erro:', error.stack);
+      
+      let mensagemErro = 'Ocorreu um erro ao finalizar seu cadastro. Tente novamente.';
+      
+      // Tratar erros específicos do Firebase
+      if (error.code === 'auth/email-already-in-use') {
+        mensagemErro = 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.';
+        console.log('❌ Erro: Email já em uso');
+      } else if (error.code === 'auth/weak-password') {
+        mensagemErro = 'A senha deve ter pelo menos 6 caracteres.';
+        console.log('❌ Erro: Senha fraca');
+      } else if (error.code === 'auth/invalid-email') {
+        mensagemErro = 'Por favor, insira um e-mail válido.';
+        console.log('❌ Erro: Email inválido');
+      } else if (error.code === 'auth/missing-password') {
+        mensagemErro = 'Por favor, insira uma senha.';
+        console.log('❌ Erro: Senha ausente');
+      } else {
+        console.log('❌ Erro não categorizado:', error.code);
+      }
+      
+      Alert.alert('Erro', mensagemErro);
     } finally {
+      console.log('🔵 FIM - handleConcluir finalizado');
       setCarregando(false);
     }
   };
@@ -273,13 +383,11 @@ const CadUnicoForm2Screen: React.FC<CadUnicoForm2ScreenProps> = ({ navigation })
               },
             ]}
           >
-            <View style={styles.iconContainer}>
-              <View style={styles.box}>
-                <View style={styles.boxFront} />
-                <View style={styles.boxSide} />
-                <View style={styles.heart} />
-              </View>
-            </View>
+            <Image 
+              source={require('../../assets/logo.png')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </Animated.View>
 
           {/* Conteúdo do formulário */}
@@ -328,26 +436,50 @@ const CadUnicoForm2Screen: React.FC<CadUnicoForm2ScreenProps> = ({ navigation })
               </View>
             </View>
 
-            {/* Botões Frente/Verso para RG e CPF */}
+            {/* Botões para upload de documentos - RG e CPF (Frente e Verso) */}
             <View style={styles.documentsRow}>
-              <View style={styles.documentButtons}>
+              <View style={styles.documentButton}>
                 <TouchableOpacity style={styles.docButton}>
-                  <Text style={styles.docButtonText}>📄</Text>
+                  <Image 
+                    source={require('../../assets/icon-image.png')} 
+                    style={styles.docIcon}
+                    resizeMode="contain"
+                  />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.docButton}>
-                  <Text style={styles.docButtonText}>📄</Text>
-                </TouchableOpacity>
-                <Text style={styles.docLabel}>Frente Verso</Text>
+                <Text style={styles.docLabel}>RG Frente</Text>
               </View>
-
-              <View style={styles.documentButtons}>
+              
+              <View style={styles.documentButton}>
                 <TouchableOpacity style={styles.docButton}>
-                  <Text style={styles.docButtonText}>📄</Text>
+                  <Image 
+                    source={require('../../assets/icon-image.png')} 
+                    style={styles.docIcon}
+                    resizeMode="contain"
+                  />
                 </TouchableOpacity>
+                <Text style={styles.docLabel}>RG Verso</Text>
+              </View>
+              
+              <View style={styles.documentButton}>
                 <TouchableOpacity style={styles.docButton}>
-                  <Text style={styles.docButtonText}>📄</Text>
+                  <Image 
+                    source={require('../../assets/icon-image.png')} 
+                    style={styles.docIcon}
+                    resizeMode="contain"
+                  />
                 </TouchableOpacity>
-                <Text style={styles.docLabel}>Frente Verso</Text>
+                <Text style={styles.docLabel}>CPF Frente</Text>
+              </View>
+              
+              <View style={styles.documentButton}>
+                <TouchableOpacity style={styles.docButton}>
+                  <Image 
+                    source={require('../../assets/icon-image.png')} 
+                    style={styles.docIcon}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+                <Text style={styles.docLabel}>CPF Verso</Text>
               </View>
             </View>
 
@@ -505,7 +637,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flex: 1,
     width: '100%',
-    height: '100%',
+    maxHeight: height * 0.85, // Limita altura para garantir scroll no React Native Web
   },
   scrollContent: {
     flexGrow: 1,
@@ -514,6 +646,10 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     paddingVertical: height * 0.03,
+  },
+  logo: {
+    width: width * 0.3,
+    height: width * 0.15,
   },
   iconContainer: {
     alignItems: 'center',
@@ -594,30 +730,42 @@ const styles = StyleSheet.create({
   documentsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: height * 0.02,
+    marginBottom: height * 0.03,
+    paddingHorizontal: width * 0.02,
+  },
+  documentButton: {
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 3,
   },
   documentButtons: {
     alignItems: 'center',
     width: '48%',
   },
   docButton: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#1E5E3F',
+    width: 60,
+    height: 60,
+    backgroundColor: 'transparent',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 5,
-    marginBottom: 5,
+    marginBottom: 8,
+  },
+  docIcon: {
+    width: 50,
+    height: 46,
+    tintColor: '#666',
   },
   docButtonText: {
     fontSize: 20,
     color: 'white',
   },
   docLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#666',
     textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 13,
   },
   pixContainer: {
     position: 'relative',

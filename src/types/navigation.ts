@@ -5,8 +5,23 @@ export type RootStackParamList = {
   Login: undefined;
   UserType: undefined;
   CadUnicoForm: undefined;
-  CadUnicoForm2: undefined;
+  CadUnicoForm2: {
+    dadosFormulario?: {
+      nomeCompleto: string;
+      endereco: string;
+      idade: string;
+      categorias: {
+        pix: boolean;
+        dinheiro: boolean;
+        cestaBasica: boolean;
+        agasalhos: boolean;
+      };
+      relato: string;
+    };
+  };
+  MainScreen: undefined;
   Splash: undefined;
+  FirebaseTest: undefined;
 };
 
 // Tipos para as props de navegação das telas
@@ -61,4 +76,9 @@ export type CadUnicoFormScreenProps = {
 export type CadUnicoForm2ScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, 'CadUnicoForm2'>;
   route: RouteProp<RootStackParamList, 'CadUnicoForm2'>;
+};
+
+export type MainScreenProps = {
+  navigation: StackNavigationProp<RootStackParamList, 'MainScreen'>;
+  route: RouteProp<RootStackParamList, 'MainScreen'>;
 };

@@ -18,9 +18,12 @@ import Animated, {
   withSpring,
   Easing 
 } from 'react-native-reanimated';
-import { HomeScreenProps } from '../types/navigation';
 
 const { width, height } = Dimensions.get('window');
+
+interface HomeScreenProps {
+  navigation: any;
+}
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   // Animações de entrada melhoradas
@@ -159,6 +162,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             onPress={handleDoador}
           >
             <Text style={styles.buttonText}>SOU UM DOADOR</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: '#FF5722' }]}
+            onPress={() => navigation.navigate('FirebaseTest')}
+          >
+            <Text style={styles.buttonText}>TESTAR FIREBASE</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
