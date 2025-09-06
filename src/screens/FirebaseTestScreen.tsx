@@ -8,7 +8,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { testFirebaseConnection, debugCurrentUser, checkFirestoreRules } from '../services/firebaseDebug';
+import { testAuthOnly, debugCurrentUser } from '../services/firebaseAuthDebug';
 
 const FirebaseTestScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ const FirebaseTestScreen: React.FC = () => {
     setLoading(true);
     clearResults();
     
-    addResult('🚀 Iniciando teste completo do Firebase...');
+    addResult('🚀 Iniciando teste do Firebase Authentication...');
     
     try {
       // Test 1: Debug current user
@@ -34,25 +34,19 @@ const FirebaseTestScreen: React.FC = () => {
       const currentUser = debugCurrentUser();
       addResult(currentUser ? `✅ Usuário logado: ${currentUser.email}` : '❌ Nenhum usuário logado');
       
-      // Test 2: Check Firestore rules
-      addResult('🔒 Verificando regras do Firestore...');
-      const rulesOk = await checkFirestoreRules();
-      addResult(rulesOk ? '✅ Regras do Firestore OK' : '❌ Problema nas regras do Firestore');
-      
-      // Test 3: Full Firebase connection test
-      addResult('🔥 Executando teste completo...');
-      const result = await testFirebaseConnection();
+      // Test 2: Authentication only test
+      addResult('� Executando teste de Authentication...');
+      const result = await testAuthOnly();
       
       if (result && result.success) {
-        addResult(`✅ Teste completo passou!`);
+        addResult(`✅ Authentication test passou!`);
         addResult(`✅ User ID: ${result.userId}`);
-        addResult(`✅ Document ID: ${result.docId}`);
         
-        Alert.alert('Sucesso!', 'Firebase está funcionando corretamente!');
+        Alert.alert('Sucesso!', 'Firebase Authentication está funcionando corretamente!');
       } else {
-        addResult(`❌ Teste falhou: ${result?.error?.message || 'Erro desconhecido'}`);
+        addResult(`❌ Authentication test falhou: ${result?.error?.message || 'Erro desconhecido'}`);
         
-        Alert.alert('Erro', `Firebase test failed: ${result?.error?.message || 'Unknown error'}`);
+        Alert.alert('Erro', `Firebase Authentication failed: ${result?.error?.message || 'Unknown error'}`);
       }
       
     } catch (error: any) {
@@ -66,7 +60,7 @@ const FirebaseTestScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Firebase Test Screen</Text>
+        <Text style={styles.title}>Firebase Authentication Test</Text>
       </View>
       
       <View style={styles.buttonContainer}>
@@ -76,7 +70,7 @@ const FirebaseTestScreen: React.FC = () => {
           disabled={loading}
         >
           <Text style={styles.buttonText}>
-            {loading ? 'Testando...' : 'Testar Firebase'}
+            {loading ? 'Testando...' : 'Testar Authentication'}
           </Text>
         </TouchableOpacity>
         

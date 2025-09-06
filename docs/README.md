@@ -2,6 +2,9 @@
 
 ## 📅 Por Data de Modificação
 
+### 2025-09-06 (Sexta-feira)
+- **[FIREBASE_AUTH_ONLY_SOLUTION.md](./2025-09-06_FIREBASE_AUTH_ONLY_SOLUTION.md)** - Solução final para erro 400 Firebase usando apenas Authentication
+
 ### 2025-09-05 (Quinta-feira)
 - **[CHANGELOG.md](./2025-09-05_CHANGELOG.md)** - Changelog completo do sistema de cadastro único
 - **[FIREBASE_DEBUG.md](./2025-09-05_FIREBASE_DEBUG.md)** - Guia de debug para problemas do Firebase
@@ -24,6 +27,7 @@
 ## 📂 Por Categoria
 
 ### 🔥 Firebase
+- [2025-09-06_FIREBASE_AUTH_ONLY_SOLUTION.md](./2025-09-06_FIREBASE_AUTH_ONLY_SOLUTION.md)
 - [2025-09-05_FIREBASE_AUTH_IMPLEMENTATION.md](./2025-09-05_FIREBASE_AUTH_IMPLEMENTATION.md)
 - [2025-09-05_FIREBASE_INTEGRATION.md](./2025-09-05_FIREBASE_INTEGRATION.md)
 - [2025-09-05_FIREBASE_DEBUG.md](./2025-09-05_FIREBASE_DEBUG.md)
@@ -48,8 +52,9 @@
 
 ## 🚀 Documentos Mais Recentes
 
-1. **2025-09-05_CHANGELOG.md** - Sistema completo de cadastro único implementado
-2. **2025-09-05_FIREBASE_DEBUG.md** - Ferramentas de debug para erro 400 do Firebase
+1. **2025-09-06_FIREBASE_AUTH_ONLY_SOLUTION.md** - Solução final para erro 400 Firebase
+2. **2025-09-05_CHANGELOG.md** - Sistema completo de cadastro único implementado
+3. **2025-09-05_FIREBASE_DEBUG.md** - Ferramentas de debug para erro 400 do Firebase
 
 ---
 
@@ -61,7 +66,7 @@
 3. Consulte [2025-09-05_CHANGELOG.md](./2025-09-05_CHANGELOG.md) para entender as últimas alterações
 
 ### Para Debug de Problemas
-1. **Firebase**: [2025-09-05_FIREBASE_DEBUG.md](./2025-09-05_FIREBASE_DEBUG.md)
+1. **Firebase**: [2025-09-06_FIREBASE_AUTH_ONLY_SOLUTION.md](./2025-09-06_FIREBASE_AUTH_ONLY_SOLUTION.md) ou [2025-09-05_FIREBASE_DEBUG.md](./2025-09-05_FIREBASE_DEBUG.md)
 2. **Scroll**: [2025-09-05_SCROLL_FIXES.md](./2025-09-05_SCROLL_FIXES.md) ou [2025-09-05_SCROLL_MOUSE_DRAG_FIX.md](./2025-09-05_SCROLL_MOUSE_DRAG_FIX.md)
 3. **Formulários**: [2025-09-05_FORMULARIO_BENEFICIARIO_COMPLETO.md](./2025-09-05_FORMULARIO_BENEFICIARIO_COMPLETO.md)
 
@@ -72,10 +77,11 @@
 
 ---
 
-**Última Atualização**: 05/09/2025  
-**Total de Documentos**: 11
+**Última Atualização**: 06/09/2025  
+**Total de Documentos**: 12
 
 ### 📊 Distribuição por Data:
 - **03/09/2025**: 1 documento (Animações)
 - **04/09/2025**: 1 documento (Estrutura do Projeto) 
 - **05/09/2025**: 9 documentos (Firebase, Formulários, Navegação, Validações, Changelog)
+- **06/09/2025**: 1 documento (Solução Final Firebase Authentication)

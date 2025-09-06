@@ -16,9 +16,8 @@ import {
 } from 'react-native';
 import { CadUnicoForm2ScreenProps } from '../types/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, addDoc } from 'firebase/firestore';
-import { auth, db } from '../services/connectionFirebase';
-import { testFirebaseConnection, debugCurrentUser } from '../services/firebaseDebug';
+import { auth } from '../services/connectionFirebase';
+import { debugCurrentUser } from '../services/firebaseAuthDebug';
 
 const { width, height } = Dimensions.get('window');
 
@@ -227,46 +226,13 @@ const CadUnicoForm2Screen: React.FC<CadUnicoForm2ScreenProps> = ({ navigation, r
       return;
     }
 
-    console.log('✅ Validação passou, executando teste completo do Firebase...');
+    console.log('✅ Validação passou, iniciando cadastro simples (só Authentication)...');
     setCarregando(true);
 
     try {
-      // Primeiro: teste completo do Firebase
-      console.log('🧪 Executando teste completo do Firebase...');
-      const testResult = await testFirebaseConnection();
+      console.log('✅ Iniciando cadastro no Firebase Authentication...');
       
-      if (testResult && !testResult.success) {
-        console.error('❌ Teste do Firebase falhou:', testResult.error);
-        Alert.alert('Erro de Configuração', 'Problema na configuração do Firebase. Tente novamente.');
-        return;
-      }
-      
-      console.log('✅ Teste do Firebase passou! Procedendo com cadastro real...');
-
-      // Dados completos do usuário para salvar no Firebase
-      const dadosCompletos = {
-        // Dados da primeira tela
-        ...dadosFormulario,
-        // Dados da segunda tela
-        rg: rg.replace(/\D/g, ''),
-        cpf: cpf.replace(/\D/g, ''),
-        chavePix,
-        telefone: telefone.replace(/\D/g, ''),
-        email: email.toLowerCase().trim(),
-        // Metadados
-        dataCadastro: new Date().toISOString(),
-        status: 'ativo',
-        tipo: 'beneficiario'
-      };
-
-      console.log('🔵 Dados completos preparados para Firebase:', {
-        ...dadosCompletos,
-        senha: '[PROTEGIDA]'
-      });
-
-      console.log('✅ Iniciando cadastro real no Firebase...');
-      
-      // 1. Criar usuário no Firebase Authentication
+      // Criar usuário no Firebase Authentication
       console.log('🔵 Chamando createUserWithEmailAndPassword...');
       console.log('🔵 Email:', email);
       console.log('🔵 Senha length:', senha?.length || 0);
@@ -276,35 +242,10 @@ const CadUnicoForm2Screen: React.FC<CadUnicoForm2ScreenProps> = ({ navigation, r
       
       console.log('✅ Usuário criado no Authentication com UID:', uid);
       
-      // 2. Salvar dados completos no Firestore
-      console.log('🔵 Salvando no Firestore...');
+      console.log('✅ Cadastro finalizado! Redirecionamento imediato para login...');
       
-      // Adicionar o UID aos dados antes de salvar
-      const dadosComUID = {
-        ...dadosCompletos,
-        uid: uid,
-        criadoEm: new Date().toISOString(),
-        status: 'ativo'
-      };
-      
-      console.log('🔵 Dados com UID para Firestore:', dadosComUID);
-      
-      const docRef = await addDoc(collection(db, 'usuarios'), dadosComUID);
-      
-      console.log('✅ Dados salvos no Firestore com sucesso! Document ID:', docRef.id);
-      
-      Alert.alert(
-        'Cadastro Concluído!',
-        'Seu cadastro foi finalizado com sucesso. Faça login para acessar sua conta.',
-        [
-          {
-            text: 'Fazer Login',
-            onPress: () => {
-              navigation.navigate('Login');
-            }
-          }
-        ]
-      );
+      // Redirecionamento imediato
+      navigation.navigate('Login');
 
     } catch (error: any) {
       console.error('❌ ERRO DETALHADO:', error);
