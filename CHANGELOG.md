@@ -1,5 +1,81 @@
 # Changelog - Sistema de Cadastro Único
 
+## [v2.1.0] - 2025-09-21 - Sistema de Perfil Completo com CadÚnico
+
+### ✨ Novas Funcionalidades
+
+#### 👤 Sistema de Perfil do Usuário
+- **ProfileScreen**: Tela completa de perfil com integração CadÚnico
+  - Campos somente leitura: Nome, CPF, RG, Data de Cadastro
+  - Campos editáveis: Telefone, E-mail, Endereço, Relato, Foto
+  - Validação em tempo real com máscaras automáticas
+  - Interface de edição intuitiva com ícones de ação
+
+#### 🌐 UserContext Global
+- **Gerenciamento de Estado**: Context API com AsyncStorage
+  - Persistência local de dados do usuário
+  - Login/logout com dados mock do CadÚnico
+  - Atualização de dados em tempo real
+  - Carregamento automático na inicialização
+
+#### 🎭 Sistema de Validação
+- **Validações robustas**: CPF, RG, telefone, e-mail, CEP
+  - Algoritmo oficial de validação de CPF
+  - Máscaras automáticas para formatação
+  - Feedback visual de erros/sucessos
+  - Validação em tempo real durante digitação
+
+#### 🏠 MainScreen Aprimorada
+- **Header personalizado**: Exibe dados reais do usuário
+  - Nome e localização do usuário logado
+  - Avatar clicável para acesso ao perfil
+  - Badge de verificação CadÚnico
+  - Navegação integrada para ProfileScreen
+
+### 🔧 Melhorias Técnicas
+
+#### 📱 Componentes Novos
+- **EditableField**: Componente reutilizável para campos editáveis
+- **GradientBackground**: Gradiente nativo sem dependências
+- **Modal de Foto**: Interface para seleção de avatar
+- **Validação TypeScript**: Tipagem completa para UserProfile
+
+#### 📁 Arquivos Adicionados
+- `src/screens/ProfileScreen.tsx` - Interface completa do perfil
+- `src/contexts/UserContext.tsx` - Contexto global do usuário
+- `src/utils/validation.ts` - Validações e máscaras
+- `docs/PROFILE_SYSTEM.md` - Documentação técnica completa
+
+#### 🔄 Arquivos Modificados
+- `src/screens/MainScreen.tsx` - Header com dados do usuário
+- `src/types/navigation.ts` - Tipos para ProfileScreen
+- `src/navigation/AppNavigator.tsx` - Rota ProfileScreen
+- `App.tsx` - Wrapper UserProvider
+
+### 🎨 Design System
+- **Paleta Verde Boer**: Cores consistentes (#4CAF50)
+- **Estados visuais**: Diferenciação editável/somente leitura
+- **Animações**: Transições suaves e feedback visual
+- **UX intuitiva**: Ícones claros e hierarquia bem definida
+
+### 📊 Dados de Exemplo
+```typescript
+usuarioMock = {
+  nome: 'Maria Santos da Silva',
+  cpf: '123.456.789-00',
+  rg: '12.345.678-9',
+  endereco: {
+    rua: 'Rua das Flores, 123',
+    cidade: 'São Paulo',
+    estado: 'SP',
+    cep: '01234-567'
+  },
+  telefone: '(11) 98765-4321',
+  email: 'maria.santos@email.com',
+  verificado: true
+}
+```
+
 ## [2025-09-05] - Implementação completa do sistema de registro e navegação principal
 
 ### ✅ Funcionalidades Adicionadas

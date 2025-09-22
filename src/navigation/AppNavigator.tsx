@@ -15,6 +15,7 @@ import UserTypeScreen from '../screens/UserTypeScreen';
 import CadUnicoFormScreen from '../screens/CadUnicoFormScreen';
 import CadUnicoForm2Screen from '../screens/CadUnicoForm2Screen';
 import MainScreen from '../screens/MainScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import SplashScreen from '../screens/SplashScreen';
 import FirebaseTestScreen from '../screens/FirebaseTestScreen';
 
@@ -172,6 +173,14 @@ const AppNavigator: React.FC = () => {
           options={{
             ...fadeTransition,
             cardStyle: { backgroundColor: '#1E5E3F' },
+          }}
+        />
+        <Stack.Screen 
+          name="ProfileScreen" 
+          component={ProfileScreen}
+          options={{
+            ...TransitionPresets.SlideFromRightIOS,
+            cardStyle: { backgroundColor: '#F1F8E9' },
           }}
         />
         <Stack.Screen 

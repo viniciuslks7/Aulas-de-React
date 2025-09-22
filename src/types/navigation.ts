@@ -20,6 +20,7 @@ export type RootStackParamList = {
     };
   };
   MainScreen: undefined;
+  ProfileScreen: undefined;
   Splash: undefined;
   FirebaseTest: undefined;
 };
@@ -81,4 +82,9 @@ export type CadUnicoForm2ScreenProps = {
 export type MainScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, 'MainScreen'>;
   route: RouteProp<RootStackParamList, 'MainScreen'>;
+};
+
+export type ProfileScreenProps = {
+  navigation: StackNavigationProp<RootStackParamList, 'ProfileScreen'>;
+  route: RouteProp<RootStackParamList, 'ProfileScreen'>;
 };

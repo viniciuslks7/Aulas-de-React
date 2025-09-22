@@ -18,6 +18,7 @@ import {
   ImageBackground
 } from 'react-native';
 import { MainScreenProps } from '../types/navigation';
+import { useUser } from '../contexts/UserContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -182,162 +183,6 @@ const eventosData: DataItem[] = [
     urgency: 'low',
     verified: true,
     tags: ['Dinheiro', 'PIX', 'Financeiro']
-  },
-  {
-    id: '4',
-    nome: 'Campanha de Livros',
-    descricao: 'Doação de livros didáticos para escolas públicas',
-    categoria: 'Educação',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.7,
-    reviews: 156,
-    location: 'Brasília, DF',
-    urgency: 'medium',
-    verified: true,
-    tags: ['Educação', 'Livros', 'Escola']
-  },
-  {
-    id: '5',
-    nome: 'Mutirão de Limpeza',
-    descricao: 'Limpeza de praias e parques urbanos',
-    categoria: 'Meio Ambiente',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.5,
-    reviews: 203,
-    location: 'Florianópolis, SC',
-    urgency: 'low',
-    verified: true,
-    tags: ['Meio Ambiente', 'Limpeza', 'Voluntário']
-  },
-  {
-    id: '6',
-    nome: 'Socorro Animal',
-    descricao: 'Resgate e cuidados com animais abandonados',
-    categoria: 'Animais',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.9,
-    reviews: 312,
-    location: 'Salvador, BA',
-    urgency: 'high',
-    verified: true,
-    tags: ['Animais', 'Resgate', 'Cuidado']
-  },
-  {
-    id: '7',
-    nome: 'Horta Comunitária',
-    descricao: 'Projeto de agricultura urbana sustentável',
-    categoria: 'Meio Ambiente',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.4,
-    reviews: 97,
-    location: 'Porto Alegre, RS',
-    urgency: 'medium',
-    verified: true,
-    tags: ['Agricultura', 'Sustentável', 'Comunidade']
-  },
-  {
-    id: '8',
-    nome: 'Oficina de Artesanato',
-    descricao: 'Capacitação profissional em artesanato para mulheres',
-    categoria: 'Educação',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.6,
-    reviews: 145,
-    location: 'Recife, PE',
-    urgency: 'low',
-    verified: true,
-    tags: ['Artesanato', 'Capacitação', 'Mulheres']
-  },
-  {
-    id: '9',
-    nome: 'Reforma da Escola',
-    descricao: 'Mutirão para melhorar infraestrutura escolar',
-    categoria: 'Educação',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.8,
-    reviews: 234,
-    location: 'Fortaleza, CE',
-    urgency: 'high',
-    verified: true,
-    tags: ['Escola', 'Reforma', 'Infraestrutura']
-  },
-  {
-    id: '10',
-    nome: 'Cesta Básica Solidária',
-    descricao: 'Distribuição mensal de alimentos não perecíveis',
-    categoria: 'Alimentação',
-    imagem: require('../../assets/cestabasica.png'),
-    rating: 4.7,
-    reviews: 189,
-    location: 'Goiânia, GO',
-    urgency: 'high',
-    verified: true,
-    tags: ['Cesta Básica', 'Mensal', 'Distribuição']
-  },
-  {
-    id: '11',
-    nome: 'Plantio de Árvores',
-    descricao: 'Reflorestamento urbano com espécies nativas',
-    categoria: 'Meio Ambiente',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.5,
-    reviews: 167,
-    location: 'Campo Grande, MS',
-    urgency: 'medium',
-    verified: true,
-    tags: ['Reflorestamento', 'Árvores', 'Nativas']
-  },
-  {
-    id: '12',
-    nome: 'Curso de Informática',
-    descricao: 'Inclusão digital para jovens e adultos',
-    categoria: 'Educação',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.6,
-    reviews: 210,
-    location: 'Vitória, ES',
-    urgency: 'medium',
-    verified: true,
-    tags: ['Informática', 'Inclusão Digital', 'Cursos']
-  },
-  {
-    id: '13',
-    nome: 'Feira de Trocas',
-    descricao: 'Evento sustentável de troca de objetos usados',
-    categoria: 'Sustentabilidade',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.3,
-    reviews: 76,
-    location: 'João Pessoa, PB',
-    urgency: 'low',
-    verified: true,
-    tags: ['Sustentabilidade', 'Troca', 'Reuso']
-  },
-  {
-    id: '14',
-    nome: 'Campanha do Agasalho',
-    descricao: 'Arrecadação de roupas de inverno para moradores de rua',
-    categoria: 'Vestuário',
-    imagem: require('../../assets/agasalho.png'),
-    rating: 4.8,
-    reviews: 298,
-    location: 'Manaus, AM',
-    urgency: 'high',
-    verified: true,
-    tags: ['Agasalho', 'Inverno', 'População de Rua']
-  },
-  {
-    id: '15',
-    nome: 'Apoio Psicológico',
-    descricao: 'Atendimento psicológico gratuito para a comunidade',
-    categoria: 'Saúde',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.9,
-    reviews: 187,
-    location: 'Aracaju, SE',
-    urgency: 'medium',
-    verified: true,
-    tags: ['Psicologia', 'Saúde Mental', 'Gratuito']
   }
 ];
 
@@ -380,71 +225,6 @@ const instituicoesData: DataItem[] = [
     urgency: 'low',
     verified: true,
     tags: ['Educação', 'Capacitação', 'Futuro']
-  },
-  {
-    id: '4',
-    nome: 'Fundação Vida Nova',
-    descricao: 'Centro de reabilitação e apoio social',
-    categoria: 'Saúde',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.6,
-    reviews: 145,
-    location: 'Brasília, DF',
-    urgency: 'medium',
-    verified: true,
-    tags: ['Reabilitação', 'Apoio', 'Saúde']
-  },
-  {
-    id: '5',
-    nome: 'Lar dos Anjos',
-    descricao: 'Abrigo para crianças em situação de risco',
-    categoria: 'Infância',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.9,
-    reviews: 267,
-    location: 'Rio de Janeiro, RJ',
-    urgency: 'high',
-    verified: true,
-    tags: ['Crianças', 'Proteção', 'Abrigo']
-  },
-  {
-    id: '6',
-    nome: 'Centro Comunitário Unidos',
-    descricao: 'Fortalecendo laços comunitários através da colaboração',
-    categoria: 'Comunidade',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.5,
-    reviews: 189,
-    location: 'Belo Horizonte, MG',
-    urgency: 'low',
-    verified: true,
-    tags: ['Comunidade', 'União', 'Colaboração']
-  },
-  {
-    id: '7',
-    nome: 'Instituto Verde Vida',
-    descricao: 'Preservação ambiental e educação ecológica',
-    categoria: 'Meio Ambiente',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.4,
-    reviews: 103,
-    location: 'Manaus, AM',
-    urgency: 'medium',
-    verified: true,
-    tags: ['Meio Ambiente', 'Preservação', 'Educação']
-  },
-  {
-    id: '8',
-    nome: 'Casa da Esperança',
-    descricao: 'Apoio a mulheres em situação de vulnerabilidade',
-    categoria: 'Mulheres',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.8,
-    reviews: 212,
-    location: 'Fortaleza, CE',
-    urgency: 'high',
-    verified: true,
-    tags: ['Mulheres', 'Apoio', 'Proteção']
   }
 ];
 
@@ -487,76 +267,12 @@ const individuosData: DataItem[] = [
     urgency: 'low',
     verified: true,
     tags: ['Empreendedora', 'Negócio', 'Independência']
-  },
-  {
-    id: '4',
-    nome: 'Carlos Oliveira',
-    descricao: 'Artesão em busca de apoio para vender seus produtos',
-    categoria: 'Arte',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.6,
-    reviews: 28,
-    location: 'Salvador, BA',
-    urgency: 'medium',
-    verified: true,
-    tags: ['Artesão', 'Arte', 'Cultura']
-  },
-  {
-    id: '5',
-    nome: 'Lucia Ferreira',
-    descricao: 'Cuidadora de idosos buscando capacitação profissional',
-    categoria: 'Saúde',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.8,
-    reviews: 42,
-    location: 'São Paulo, SP',
-    urgency: 'low',
-    verified: true,
-    tags: ['Cuidadora', 'Capacitação', 'Idosos']
-  },
-  {
-    id: '6',
-    nome: 'Pedro Rocha',
-    descricao: 'Agricultor familiar em busca de sementes e ferramentas',
-    categoria: 'Agricultura',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.4,
-    reviews: 19,
-    location: 'Goiânia, GO',
-    urgency: 'high',
-    verified: false,
-    tags: ['Agricultura', 'Família', 'Rural']
-  },
-  {
-    id: '7',
-    nome: 'Rosa Lima',
-    descricao: 'Costureira procurando máquina para ampliar seu negócio',
-    categoria: 'Empreendedorismo',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.5,
-    reviews: 35,
-    location: 'Curitiba, PR',
-    urgency: 'medium',
-    verified: true,
-    tags: ['Costura', 'Empreendedorismo', 'Negócio']
-  },
-  {
-    id: '8',
-    nome: 'Antonio Gomes',
-    descricao: 'Aposentado voluntário em projetos sociais',
-    categoria: 'Voluntário',
-    imagem: require('../../assets/logo.png'),
-    rating: 4.9,
-    reviews: 67,
-    location: 'Rio de Janeiro, RJ',
-    urgency: 'low',
-    verified: true,
-    tags: ['Voluntário', 'Experiência', 'Solidariedade']
   }
 ];
 
 const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
-  console.log('🚀 DEBUG: MainScreen renderizado');
+  // User context
+  const { user, isLoading: userLoading } = useUser();
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -576,14 +292,11 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
   
   const tabs = ['Eventos', 'Instituições', 'Indivíduos'];
   const tabData = [eventosData, instituicoesData, individuosData];
-  
-  console.log(`📊 DEBUG: Dados carregados - Eventos: ${eventosData.length}, Instituições: ${instituicoesData.length}, Indivíduos: ${individuosData.length}`);
 
   // Filtered data based on search and filters
   const filteredData = useMemo(() => {
-    console.log(`🔍 DEBUG: Filtrando dados - Tab: ${activeTab}, Search: "${searchQuery}", Filtros: [${selectedFilters.join(', ')}]`);
     const currentData = tabData[activeTab];
-    const filtered = currentData.filter(item => {
+    return currentData.filter(item => {
       const matchesSearch = searchQuery === '' || 
         item.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.descricao.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -594,8 +307,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
         
       return matchesSearch && matchesFilters;
     });
-    console.log(`📊 DEBUG: ${filtered.length} itens após filtros de ${currentData.length} totais`);
-    return filtered;
   }, [activeTab, searchQuery, selectedFilters, tabData]);
 
   // Get unique categories for filter chips
@@ -607,7 +318,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
 
   // Entrance animation
   useEffect(() => {
-    console.log('🎬 DEBUG: Iniciando animações de entrada');
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -625,9 +335,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
         friction: 7,
         useNativeDriver: true,
       })
-    ]).start(() => {
-      console.log('✅ DEBUG: Animações de entrada concluídas');
-    });
+    ]).start();
   }, []);
 
   // Optimized handlers - Corrigindo bugs de rolagem
@@ -662,12 +370,10 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
   // }, [activeTab]);
 
   const handleRefresh = useCallback(async () => {
-    console.log('🔄 DEBUG: handleRefresh iniciado');
     setRefreshing(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     setRefreshing(false);
-    console.log('✅ DEBUG: handleRefresh concluído');
   }, []);
 
   const handleSearch = useCallback((text: string) => {
@@ -693,18 +399,17 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
 
   // Premium Card Component with Animations - Otimizado para rolagem
   const PremiumCard = React.memo(({ item, index }: { item: DataItem; index: number }) => {
-    console.log(`🎴 DEBUG: PremiumCard criado - Index: ${index}, Item: ${item.nome}`);
     const cardScale = useRef(new Animated.Value(1)).current;
     const cardOpacity = useRef(new Animated.Value(0)).current;
     
     useEffect(() => {
-      // Animação simples que não interfere com rolagem
+      // Animação mais suave para não interferir com rolagem
       Animated.timing(cardOpacity, {
         toValue: 1,
-        duration: 300, // Duração fixa para melhor performance
+        duration: 200 + (index * 50), // Reduzido para melhor performance
         useNativeDriver: true,
       }).start();
-    }, []);
+    }, [index]);
 
     const handlePressIn = useCallback(() => {
       Animated.spring(cardScale, {
@@ -804,11 +509,17 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
               {item.descricao}
             </Text>
 
-            {/* Tags Row - Rolagem horizontal simples */}
+            {/* Tags Row - Rolagem horizontal otimizada */}
             <ScrollView 
               horizontal 
               showsHorizontalScrollIndicator={false}
               style={styles.tagsScrollContainer}
+              // Otimizações para rolagem suave
+              decelerationRate="fast"
+              scrollEventThrottle={16}
+              nestedScrollEnabled={true}
+              bounces={false}
+              overScrollMode="never"
             >
               <View style={styles.tagsContainer}>
                 {item.tags.map((tag, tagIndex) => (
@@ -840,202 +551,217 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
     );
   });
 
-  const renderItem = ({ item, index }: { item: DataItem; index: number }) => {
-    console.log(`📱 DEBUG: Renderizando item ${index}: ${item.nome}`);
-    return <PremiumCard item={item} index={index} />;
-  };
+  const renderItem = ({ item, index }: { item: DataItem; index: number }) => (
+    <PremiumCard item={item} index={index} />
+  );
 
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor={DESIGN_SYSTEM.colors.primary} />
-      <View style={styles.container}>
-        {/* SCROLL PRINCIPAL - Ocupa TODA a tela */}
-        <FlatList
-          data={filteredData}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={true}
-          contentContainerStyle={styles.fullScreenListContainer}
-          scrollEnabled={true}
-          ListHeaderComponent={() => (
-            <View>
-              {/* Header com margem do SafeArea */}
-              <View style={styles.safeAreaSpacer} />
-              
-              {/* Premium Tabs */}
-              <View style={styles.tabContainer}>
-                {tabs.map((tab, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.tab,
-                      activeTab === index && styles.activeTab
-                    ]}
-                    onPress={() => handleTabPress(index)}
-                  >
-                    <Text style={[
-                      styles.tabText,
-                      activeTab === index && styles.activeTabText
-                    ]}>
-                      {tab}
-                    </Text>
-                    {activeTab === index && <View style={styles.tabIndicator} />}
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* Filter Chips - Dentro do scroll */}
-              {availableCategories.length > 0 && (
-                <ScrollView 
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.filtersContainer}
-                  contentContainerStyle={styles.filtersContent}
-                >
-                  {availableCategories.map((category, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[
-                        styles.filterChip,
-                        selectedFilters.includes(category) && styles.filterChipActive
-                      ]}
-                      onPress={() => toggleFilter(category)}
-                    >
-                      <Text style={[
-                        styles.filterChipText,
-                        selectedFilters.includes(category) && styles.filterChipTextActive
-                      ]}>
-                        {category}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              )}
-            </View>
-          )}
-          onLayout={(event) => {
-            console.log('📐 DEBUG: FlatList Layout:', event.nativeEvent.layout);
-          }}
-          onContentSizeChange={(width, height) => {
-            console.log(`📏 DEBUG: Content Size - Width: ${width}, Height: ${height}`);
-          }}
-          onScrollBeginDrag={() => console.log('📱 DEBUG: Scroll iniciado - Mouse/Touch detectado')}
-          onScrollEndDrag={() => console.log('📱 DEBUG: Scroll finalizado - Mouse/Touch liberado')}
-          onMomentumScrollBegin={() => console.log('📱 DEBUG: Momentum scroll iniciado')}
-          onMomentumScrollEnd={() => console.log('📱 DEBUG: Momentum scroll finalizado')}
-          onScroll={(event) => {
-            const y = event.nativeEvent.contentOffset.y;
-            const height = event.nativeEvent.contentSize.height;
-            const layoutHeight = event.nativeEvent.layoutMeasurement.height;
-            const maxScrollY = height - layoutHeight;
-            console.log(`📱 DEBUG: Scroll Y: ${y.toFixed(0)} | Max: ${maxScrollY.toFixed(0)} | Content: ${height.toFixed(0)} | Layout: ${layoutHeight.toFixed(0)}`);
-          }}
-          scrollEventThrottle={16}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={[DESIGN_SYSTEM.colors.primary]}
-              tintColor={DESIGN_SYSTEM.colors.primary}
-              progressBackgroundColor={DESIGN_SYSTEM.colors.surface}
-            />
-          }
-          ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateIcon}>🔍</Text>
-              <Text style={styles.emptyStateTitle}>Nenhum resultado encontrado</Text>
-              <Text style={styles.emptyStateDescription}>
-                {searchQuery 
-                  ? `Não encontramos resultados para "${searchQuery}"`
-                  : 'Nenhum item disponível nesta categoria'
-                }
-              </Text>
-            </View>
-          )}
-          removeClippedSubviews={false}
-          maxToRenderPerBatch={15}
-          windowSize={15}
-          initialNumToRender={15}
-        />
-
-        {/* HEADER FLUTUANTE - Sobrepõe o conteúdo */}
-        <View style={styles.floatingHeaderContainer}>
+      <SafeAreaView style={styles.container}>
+        <Animated.View 
+          style={[
+            styles.mainContent,
+            {
+              opacity: fadeAnim,
+              transform: [
+                { translateY: slideAnim },
+                { scale: scaleAnim }
+              ]
+            }
+          ]}
+        >
+          {/* Boer-Style Premium Header - Notificação com Sino */}
           <GradientBackground 
             colors={DESIGN_SYSTEM.colors.gradient}
-            style={styles.floatingHeader}
+            style={styles.headerContainer}
           >
-            <SafeAreaView>
-              <View style={styles.header}>
-                {/* Profile Avatar */}
-                <TouchableOpacity style={styles.profileButton}>
-                  <View style={styles.avatarContainer}>
-                    <Image 
-                      source={require('../../assets/logo.png')} 
-                      style={styles.avatarImage}
-                    />
-                    <View style={styles.onlineIndicator} />
-                  </View>
-                </TouchableOpacity>
-                
-                {/* Location & Greeting */}
-                <View style={styles.headerCenter}>
-                  <Text style={styles.greetingText}>Bem-vindo ao Boer! 🤝</Text>
-                  <Text style={styles.locationText}>📍 Conectando quem precisa com quem pode ajudar</Text>
-                </View>
-                
-                {/* Notifications */}
-                <TouchableOpacity style={styles.notificationButton}>
-                  <Text style={styles.notificationIcon}>🔔</Text>
-                  <View style={styles.notificationBadge}>
-                    <Text style={styles.badgeText}>5</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-
-              {/* Search Bar estilo Boer */}
-              <View style={styles.searchSection}>
-                <View style={styles.searchBarContainer}>
-                  <Text style={styles.searchIcon}>🔍</Text>
-                  <TextInput
-                    ref={searchInputRef}
-                    style={styles.searchInput}
-                    placeholder="Buscar por campanhas, instituições, pessoas..."
-                    placeholderTextColor={DESIGN_SYSTEM.colors.onSurfaceVariant}
-                    value={searchQuery}
-                    onChangeText={handleSearch}
-                    onFocus={() => setIsSearchFocused(true)}
-                    onBlur={() => setIsSearchFocused(false)}
+            <View style={styles.header}>
+              {/* Profile Avatar */}
+              <TouchableOpacity 
+                style={styles.profileButton}
+                onPress={() => navigation.navigate('ProfileScreen')}
+              >
+                <View style={styles.avatarContainer}>
+                  <Image 
+                    source={user?.fotoPerfil || require('../../assets/logo.png')} 
+                    style={styles.avatarImage}
                   />
-                  {searchQuery.length > 0 && (
-                    <TouchableOpacity 
-                      style={styles.clearSearchButton}
-                      onPress={() => setSearchQuery('')}
-                    >
-                      <Text style={styles.clearIcon}>✕</Text>
-                    </TouchableOpacity>
+                  <View style={styles.onlineIndicator} />
+                  {user?.verificado && (
+                    <View style={styles.verifiedBadgeSmall}>
+                      <Text style={styles.verifiedIconSmall}>✓</Text>
+                    </View>
                   )}
                 </View>
+              </TouchableOpacity>
+              
+              {/* Location & Greeting */}
+              <View style={styles.headerCenter}>
+                <Text style={styles.greetingText}>
+                  Olá, {user?.nome ? user.nome.split(' ')[0] : 'Usuário'}! 🤝
+                </Text>
+                <Text style={styles.locationText}>
+                  📍 {user?.endereco ? `${user.endereco.cidade}, ${user.endereco.estado}` : 'Conectando quem precisa com quem pode ajudar'}
+                </Text>
               </View>
-            </SafeAreaView>
-          </GradientBackground>
-        </View>
+              
+              {/* Notifications */}
+              <TouchableOpacity style={styles.notificationButton}>
+                <Text style={styles.notificationIcon}>🔔</Text>
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.badgeText}>5</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
 
-        {/* BOTTOM NAV FLUTUANTE */}
-        <View style={styles.floatingBottomNav}>
-          <TouchableOpacity 
-            style={styles.bottomNavItem}
-            onPress={() => searchInputRef.current?.focus()}
-          >
-            <Text style={styles.bottomNavIcon}>🔍</Text>
-            <Text style={styles.bottomNavLabel}>Buscar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.bottomNavItem}>
-            <Text style={styles.bottomNavIcon}>👤</Text>
-            <Text style={styles.bottomNavLabel}>Perfil</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+            {/* Search Bar estilo Boer */}
+            <View style={styles.searchSection}>
+              <View style={styles.searchBarContainer}>
+                <Text style={styles.searchIcon}>🔍</Text>
+                <TextInput
+                  ref={searchInputRef}
+                  style={styles.searchInput}
+                  placeholder="Buscar por campanhas, instituições, pessoas..."
+                  placeholderTextColor={DESIGN_SYSTEM.colors.onSurfaceVariant}
+                  value={searchQuery}
+                  onChangeText={handleSearch}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity 
+                    style={styles.clearSearchButton}
+                    onPress={() => setSearchQuery('')}
+                  >
+                    <Text style={styles.clearIcon}>✕</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </GradientBackground>
+
+          {/* Filter Chips - Rolagem horizontal melhorada */}
+          {availableCategories.length > 0 && (
+            <ScrollView 
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.filtersContainer}
+              contentContainerStyle={styles.filtersContent}
+              // Melhorias para rolagem horizontal suave
+              decelerationRate="fast"
+              scrollEventThrottle={16}
+              // Evitar conflitos com rolagem vertical
+              nestedScrollEnabled={true}
+              // Suporte para iOS
+              bounces={false}
+              // Suporte para Android
+              overScrollMode="never"
+            >
+              {availableCategories.map((category, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.filterChip,
+                    selectedFilters.includes(category) && styles.filterChipActive
+                  ]}
+                  onPress={() => toggleFilter(category)}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    selectedFilters.includes(category) && styles.filterChipTextActive
+                  ]}>
+                    {category}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+
+          {/* Premium Tabs */}
+          <View style={styles.tabContainer}>
+            {tabs.map((tab, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.tab,
+                  activeTab === index && styles.activeTab
+                ]}
+                onPress={() => handleTabPress(index)}
+              >
+                <Text style={[
+                  styles.tabText,
+                  activeTab === index && styles.activeTabText
+                ]}>
+                  {tab}
+                </Text>
+                {activeTab === index && <View style={styles.tabIndicator} />}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Premium Content List - Melhorada para rolagem suave */}
+          <FlatList
+            data={filteredData}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContainer}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={[DESIGN_SYSTEM.colors.primary]}
+                tintColor={DESIGN_SYSTEM.colors.primary}
+                progressBackgroundColor={DESIGN_SYSTEM.colors.surface}
+              />
+            }
+            ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateIcon}>🔍</Text>
+                <Text style={styles.emptyStateTitle}>Nenhum resultado encontrado</Text>
+                <Text style={styles.emptyStateDescription}>
+                  {searchQuery 
+                    ? `Não encontramos resultados para "${searchQuery}"`
+                    : 'Nenhum item disponível nesta categoria'
+                  }
+                </Text>
+              </View>
+            )}
+            // Otimizações para melhor performance de rolagem
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={5}
+            windowSize={8}
+            initialNumToRender={4}
+            updateCellsBatchingPeriod={100}
+            getItemLayout={undefined} // Deixar undefined para altura dinâmica
+            // Suavização da rolagem
+            decelerationRate="normal"
+            scrollEventThrottle={16}
+            // Melhor gestão de memória
+            legacyImplementation={false}
+          />
+
+          {/* Premium Bottom Navigation */}
+          <View style={styles.bottomNav}>
+            <TouchableOpacity 
+              style={styles.bottomNavItem}
+              onPress={() => searchInputRef.current?.focus()}
+            >
+              <Text style={styles.bottomNavIcon}>🔍</Text>
+              <Text style={styles.bottomNavLabel}>Buscar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.bottomNavItem}
+              onPress={() => navigation.navigate('ProfileScreen')}
+            >
+              <Text style={styles.bottomNavIcon}>👤</Text>
+              <Text style={styles.bottomNavLabel}>Perfil</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </SafeAreaView>
     </>
   );
 };
@@ -1110,6 +836,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+  },
+
+  verifiedBadgeSmall: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: DESIGN_SYSTEM.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+
+  verifiedIconSmall: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
 
   headerCenter: {
@@ -1209,15 +955,17 @@ const styles = StyleSheet.create({
     color: DESIGN_SYSTEM.colors.onSurfaceVariant,
   },
 
-  // Premium Filter Chips - Simplificados
+  // Premium Filter Chips - Rolagem otimizada
   filtersContainer: {
     maxHeight: 52,
     marginBottom: DESIGN_SYSTEM.spacing.sm,
+    flexGrow: 0, // Evita conflitos com rolagem principal
   },
 
   filtersContent: {
     paddingHorizontal: DESIGN_SYSTEM.spacing.lg,
     paddingVertical: DESIGN_SYSTEM.spacing.xs,
+    alignItems: 'center', // Centraliza verticalmente
   },
 
   filterChip: {
@@ -1372,11 +1120,14 @@ const styles = StyleSheet.create({
 
   tagsScrollContainer: {
     marginBottom: DESIGN_SYSTEM.spacing.md,
+    flexGrow: 0, // Evita conflitos com rolagem principal
+    maxHeight: 40, // Altura fixa para melhor performance
   },
 
   tagsContainer: {
     flexDirection: 'row',
     paddingRight: DESIGN_SYSTEM.spacing.lg,
+    alignItems: 'center', // Centraliza verticalmente
   },
 
   tag: {
@@ -1430,53 +1181,11 @@ const styles = StyleSheet.create({
     borderColor: DESIGN_SYSTEM.colors.outline,
   },
 
-  // Shared Styles - SCROLL TOTAL DA TELA
-  fullScreenListContainer: {
-    paddingHorizontal: DESIGN_SYSTEM.spacing.lg,
-    paddingTop: 10, // Mínimo no topo
-    paddingBottom: 120, // Espaço para bottom nav flutuante
-  },
-
-  safeAreaSpacer: {
-    height: 200, // Espaço para o header flutuante não sobrepor conteúdo
-  },
-
-  // Header flutuante
-  floatingHeaderContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    elevation: 10,
-  },
-
-  floatingHeader: {
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-  },
-
-  // Bottom nav flutuante
-  floatingBottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: DESIGN_SYSTEM.colors.surface,
-    flexDirection: 'row',
-    paddingVertical: DESIGN_SYSTEM.spacing.md,
-    paddingHorizontal: DESIGN_SYSTEM.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: DESIGN_SYSTEM.colors.outline,
-    zIndex: 1000,
-    elevation: 10,
-  },
-
-  // Shared Styles - Ajustados para permitir rolagem adequada
+  // Shared Styles - Melhorados para rolagem
   listContainer: {
-    paddingHorizontal: DESIGN_SYSTEM.spacing.lg,
-    paddingTop: DESIGN_SYSTEM.spacing.md,
-    paddingBottom: 400, // Aumentado drasticamente para scroll
+    padding: DESIGN_SYSTEM.spacing.lg,
+    paddingBottom: DESIGN_SYSTEM.spacing.xl * 2,
+    flexGrow: 1, // Garante que a lista ocupe o espaço necessário
   },
 
   itemSeparator: {
