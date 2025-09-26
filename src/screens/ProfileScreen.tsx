@@ -17,6 +17,11 @@ import {
 } from 'react-native';
 import { ProfileScreenProps } from '../types/navigation';
 import { useUser } from '../contexts/UserContext';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { storage, auth } from '../services/connectionFirebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { updateEmail as firebaseUpdateEmail, updatePassword as firebaseUpdatePassword, deleteUser as firebaseDeleteUser } from 'firebase/auth';
 import { 
   maskCPF, 
   maskRG, 
@@ -170,7 +175,7 @@ const mockUserData: UserProfile = {
 };
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const { user, updateUser, isLoading } = useUser();
+  const { user, updateUser, isLoading, logout } = useUser();
   const [editMode, setEditMode] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValues, setTempValues] = useState<any>({});
@@ -238,7 +243,54 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     }
   };
 
-  // 📝 Função para cancelar edição
+  // � Seleção de imagem e upload para Firebase Storage
+  const pickImageAndUpload = async (fromCamera = false) => {
+    try {
+      // pedir permissão
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Permissão negada', 'Precisamos de permissão para acessar suas fotos.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+
+      if ((result as any).canceled || !(result as any).assets?.length) return;
+
+      const localUri = (result as any).assets[0].uri;
+
+      // Ler como base64 e enviar para Firebase Storage
+      const fileInfo = await FileSystem.readAsStringAsync(localUri, { encoding: 'base64' });
+      // converter base64 para blob
+      const binary = atob(fileInfo);
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const blob = bytes.buffer;
+
+      const filename = `profile_${userData.id || 'unknown'}_${Date.now()}.jpg`;
+      const sRef = storageRef(storage, `profile_photos/${filename}`);
+
+  await uploadBytes(sRef, bytes);
+      const downloadUrl = await getDownloadURL(sRef);
+
+      // Persistir a URL no usuário
+      await updateUser({ fotoPerfil: downloadUrl });
+      Alert.alert('✅ Sucesso', 'Foto de perfil atualizada.');
+    } catch (error) {
+      console.error('Erro upload foto:', error);
+      Alert.alert('❌ Erro', 'Não foi possível enviar a foto.');
+    }
+  };
+
+  // �📝 Função para cancelar edição
   const handleCancel = () => {
     setEditingField(null);
     setTempValues({});
@@ -259,7 +311,71 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     }
   };
 
-  // 📝 Campo Editável Component
+  // � Salvar alteração de senha (fluxo demo local)
+  const handleChangePassword = async (newPassword: string, confirmPassword: string) => {
+    if (!newPassword || newPassword.length < 6) {
+      Alert.alert('❌ Senha inválida', 'A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert('❌ Senhas não conferem', 'As senhas informadas são diferentes.');
+      return;
+    }
+
+    try {
+      // Se houver usuário autenticado no Firebase, atualiza via SDK
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        await firebaseUpdatePassword(currentUser, newPassword);
+        // NÃO salvar senha localmente em produção
+        setEditingField(null);
+        setTempValues({});
+        Alert.alert('✅ Sucesso', 'Senha atualizada no provedor de autenticação.');
+        return;
+      }
+
+      // Fallback demo local
+      await updateUser({ senha: newPassword });
+      setEditingField(null);
+      setTempValues({});
+      Alert.alert('✅ Sucesso', 'Senha atualizada com sucesso (fluxo demo).');
+    } catch (error: any) {
+      console.error('Erro mudar senha:', error);
+      Alert.alert('❌ Erro', error?.message || 'Não foi possível atualizar a senha.');
+    }
+  };
+
+  // 🗑️ Deletar conta (demo local): confirmação e remoção dos dados locais
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Deletar conta',
+      'Tem certeza que deseja deletar sua conta? Esta ação removerá TODOS os dados locais e não poderá ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Deletar', style: 'destructive', onPress: async () => {
+            try {
+              const currentUser = auth.currentUser;
+              if (currentUser) {
+                // Em produção: re-auth se necessário e apagar via Firebase Auth
+                await firebaseDeleteUser(currentUser);
+              }
+
+              // Limpar local
+              await logout();
+              Alert.alert('Conta deletada', 'Sua conta foi removida.');
+              navigation.replace('Login');
+            } catch (error: any) {
+              console.error('Erro deletar conta:', error);
+              Alert.alert('❌ Erro', error?.message || 'Não foi possível deletar a conta.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // �📝 Campo Editável Component
   const EditableField = ({ 
     label, 
     value, 
@@ -451,6 +567,57 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 keyboardType="email-address"
                 icon="📧"
               />
+
+              {/* Password field (editable) */}
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>🔒 Senha</Text>
+                {editingField === 'senha' ? (
+                  <View style={styles.editContainer}>
+                    <TextInput
+                      style={styles.editInput}
+                      value={tempValues.senha || ''}
+                      onChangeText={(text) => setTempValues((prev: any) => ({ ...prev, senha: text }))}
+                      placeholder="Nova senha"
+                      secureTextEntry
+                      autoFocus
+                    />
+                    <TextInput
+                      style={styles.editInput}
+                      value={tempValues.senhaConfirm || ''}
+                      onChangeText={(text) => setTempValues((prev: any) => ({ ...prev, senhaConfirm: text }))}
+                      placeholder="Confirme a nova senha"
+                      secureTextEntry
+                    />
+                    <View style={styles.editActions}>
+                      <TouchableOpacity
+                        style={styles.saveButton}
+                        onPress={() => handleChangePassword(tempValues.senha, tempValues.senhaConfirm)}
+                      >
+                        <Text style={styles.saveButtonText}>✅ Salvar Senha</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={handleCancel}
+                      >
+                        <Text style={styles.cancelButtonText}>❌ Cancelar</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.fieldValueContainer}>
+                    <Text style={[styles.fieldValue, styles.readOnlyValue]}>••••••••</Text>
+                    <TouchableOpacity
+                      style={styles.editIcon}
+                      onPress={() => {
+                        setEditingField('senha');
+                        setTempValues({ senha: '', senhaConfirm: '' });
+                      }}
+                    >
+                      <Text style={styles.editIconText}>✏️</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
             </View>
 
             {/* Address Section */}
@@ -569,6 +736,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </View>
           </Animated.View>
         </ScrollView>
+
+        {/* Delete account button (demo) */}
+        <View style={styles.deleteButtonContainer}>
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
+            <Text style={styles.deleteButtonText}>Deletar Conta</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Photo Modal */}
         <Modal
@@ -868,6 +1042,28 @@ const styles = StyleSheet.create({
     color: DESIGN_SYSTEM.colors.onSurfaceVariant,
     fontSize: DESIGN_SYSTEM.typography.button.fontSize,
     fontWeight: '600',
+  },
+
+  // Delete account button
+  deleteButtonContainer: {
+    marginTop: DESIGN_SYSTEM.spacing.lg,
+    alignItems: 'center'
+  },
+
+  deleteButton: {
+    backgroundColor: DESIGN_SYSTEM.colors.error,
+    paddingVertical: DESIGN_SYSTEM.spacing.md,
+    paddingHorizontal: DESIGN_SYSTEM.spacing.xl,
+    borderRadius: DESIGN_SYSTEM.borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 180,
+  },
+
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: DESIGN_SYSTEM.typography.button.fontSize,
+    fontWeight: '700',
   },
 
   // Address

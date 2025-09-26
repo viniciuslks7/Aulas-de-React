@@ -17,6 +17,7 @@ export interface UserProfile {
   };
   telefone: string;
   email: string;
+  senha?: string;
   relato: string;
   fotoPerfil?: any;
   dataCadastro: string;
@@ -50,6 +51,7 @@ const mockUserData: UserProfile = {
   },
   telefone: '(11) 98765-4321',
   email: 'maria.santos@email.com',
+  senha: 'senha123',
   relato: 'Sou mãe de 3 filhos e trabalho como diarista. Estou passando por dificuldades financeiras e preciso de ajuda para comprar alimentos básicos para minha família.',
   fotoPerfil: null,
   dataCadastro: '2025-01-15',

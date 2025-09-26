@@ -280,7 +280,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   
   // State management
-  const [activeTab, setActiveTab] = useState(0);
+  // Por padrão abrir na aba 'Instituições' conforme layout Figma
+  const [activeTab, setActiveTab] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -555,214 +556,77 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
     <PremiumCard item={item} index={index} />
   );
 
+  // Novo layout inspirado no Figma - simplificado e responsivo
   return (
-    <>
-      <StatusBar barStyle="light-content" backgroundColor={DESIGN_SYSTEM.colors.primary} />
-      <SafeAreaView style={styles.container}>
-        <Animated.View 
-          style={[
-            styles.mainContent,
-            {
-              opacity: fadeAnim,
-              transform: [
-                { translateY: slideAnim },
-                { scale: scaleAnim }
-              ]
-            }
-          ]}
-        >
-          {/* Boer-Style Premium Header - Notificação com Sino */}
-          <GradientBackground 
-            colors={DESIGN_SYSTEM.colors.gradient}
-            style={styles.headerContainer}
-          >
-            <View style={styles.header}>
-              {/* Profile Avatar */}
-              <TouchableOpacity 
-                style={styles.profileButton}
-                onPress={() => navigation.navigate('ProfileScreen')}
-              >
-                <View style={styles.avatarContainer}>
-                  <Image 
-                    source={user?.fotoPerfil || require('../../assets/logo.png')} 
-                    style={styles.avatarImage}
-                  />
-                  <View style={styles.onlineIndicator} />
-                  {user?.verificado && (
-                    <View style={styles.verifiedBadgeSmall}>
-                      <Text style={styles.verifiedIconSmall}>✓</Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-              
-              {/* Location & Greeting */}
-              <View style={styles.headerCenter}>
-                <Text style={styles.greetingText}>
-                  Olá, {user?.nome ? user.nome.split(' ')[0] : 'Usuário'}! 🤝
-                </Text>
-                <Text style={styles.locationText}>
-                  📍 {user?.endereco ? `${user.endereco.cidade}, ${user.endereco.estado}` : 'Conectando quem precisa com quem pode ajudar'}
-                </Text>
-              </View>
-              
-              {/* Notifications */}
-              <TouchableOpacity style={styles.notificationButton}>
-                <Text style={styles.notificationIcon}>🔔</Text>
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.badgeText}>5</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#2C9E67" />
 
-            {/* Search Bar estilo Boer */}
-            <View style={styles.searchSection}>
-              <View style={styles.searchBarContainer}>
-                <Text style={styles.searchIcon}>🔍</Text>
-                <TextInput
-                  ref={searchInputRef}
-                  style={styles.searchInput}
-                  placeholder="Buscar por campanhas, instituições, pessoas..."
-                  placeholderTextColor={DESIGN_SYSTEM.colors.onSurfaceVariant}
-                  value={searchQuery}
-                  onChangeText={handleSearch}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setIsSearchFocused(false)}
-                />
-                {searchQuery.length > 0 && (
-                  <TouchableOpacity 
-                    style={styles.clearSearchButton}
-                    onPress={() => setSearchQuery('')}
-                  >
-                    <Text style={styles.clearIcon}>✕</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          </GradientBackground>
-
-          {/* Filter Chips - Rolagem horizontal melhorada */}
-          {availableCategories.length > 0 && (
-            <ScrollView 
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.filtersContainer}
-              contentContainerStyle={styles.filtersContent}
-              // Melhorias para rolagem horizontal suave
-              decelerationRate="fast"
-              scrollEventThrottle={16}
-              // Evitar conflitos com rolagem vertical
-              nestedScrollEnabled={true}
-              // Suporte para iOS
-              bounces={false}
-              // Suporte para Android
-              overScrollMode="never"
-            >
-              {availableCategories.map((category, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.filterChip,
-                    selectedFilters.includes(category) && styles.filterChipActive
-                  ]}
-                  onPress={() => toggleFilter(category)}
-                >
-                  <Text style={[
-                    styles.filterChipText,
-                    selectedFilters.includes(category) && styles.filterChipTextActive
-                  ]}>
-                    {category}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-
-          {/* Premium Tabs */}
-          <View style={styles.tabContainer}>
-            {tabs.map((tab, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.tab,
-                  activeTab === index && styles.activeTab
-                ]}
-                onPress={() => handleTabPress(index)}
-              >
-                <Text style={[
-                  styles.tabText,
-                  activeTab === index && styles.activeTabText
-                ]}>
-                  {tab}
-                </Text>
-                {activeTab === index && <View style={styles.tabIndicator} />}
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Premium Content List - Melhorada para rolagem suave */}
-          <FlatList
-            data={filteredData}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContainer}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-                colors={[DESIGN_SYSTEM.colors.primary]}
-                tintColor={DESIGN_SYSTEM.colors.primary}
-                progressBackgroundColor={DESIGN_SYSTEM.colors.surface}
-              />
-            }
-            ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
-            ListEmptyComponent={() => (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateIcon}>🔍</Text>
-                <Text style={styles.emptyStateTitle}>Nenhum resultado encontrado</Text>
-                <Text style={styles.emptyStateDescription}>
-                  {searchQuery 
-                    ? `Não encontramos resultados para "${searchQuery}"`
-                    : 'Nenhum item disponível nesta categoria'
-                  }
-                </Text>
-              </View>
-            )}
-            // Otimizações para melhor performance de rolagem
-            removeClippedSubviews={true}
-            maxToRenderPerBatch={5}
-            windowSize={8}
-            initialNumToRender={4}
-            updateCellsBatchingPeriod={100}
-            getItemLayout={undefined} // Deixar undefined para altura dinâmica
-            // Suavização da rolagem
-            decelerationRate="normal"
-            scrollEventThrottle={16}
-            // Melhor gestão de memória
-            legacyImplementation={false}
+      {/* Top Bar (barra verde) */}
+      <View style={styles.figmaTopBar}>
+  <Image source={require('../../assets/logo.png')} style={styles.logo} />
+        <View style={styles.figmaSearchBar}>
+          <Image source={require('../../assets/icon-lupa-naoselecionado.png')} style={styles.searchIconLarge} />
+          <TextInput
+            ref={searchInputRef}
+            placeholder="#SOS Mendigos"
+            placeholderTextColor="rgba(0,0,0,0.5)"
+            style={styles.searchInputFigma}
+            value={searchQuery}
+            onChangeText={handleSearch}
           />
+          <TouchableOpacity onPress={() => { /* abrir filtros */ }}>
+            <Image source={require('../../assets/Funil-icon.png')} style={styles.funnelIcon} />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-          {/* Premium Bottom Navigation */}
-          <View style={styles.bottomNav}>
-            <TouchableOpacity 
-              style={styles.bottomNavItem}
-              onPress={() => searchInputRef.current?.focus()}
-            >
-              <Text style={styles.bottomNavIcon}>🔍</Text>
-              <Text style={styles.bottomNavLabel}>Buscar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.bottomNavItem}
-              onPress={() => navigation.navigate('ProfileScreen')}
-            >
-              <Text style={styles.bottomNavIcon}>👤</Text>
-              <Text style={styles.bottomNavLabel}>Perfil</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </SafeAreaView>
-    </>
+      {/* Content Area com fundo branco translúcido */}
+      <View style={styles.figmaContent}>
+        {/* Tabs (Eventos | Instituições | Indivíduos) */}
+        <View style={styles.tabsRowFigma}>
+          <TouchableOpacity onPress={() => handleTabPress(0)}>
+            <Text style={[styles.tabLabelFigma, activeTab === 0 && styles.tabInactiveFigma]}>Eventos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleTabPress(1)}>
+            <Text style={[styles.tabLabelFigma, activeTab === 1 && styles.tabActiveFigma]}>Instituições</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleTabPress(2)}>
+            <Text style={[styles.tabLabelFigma, activeTab === 2 && styles.tabInactiveFigma]}>Indivíduos</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Lista similar ao Figma: itens fixos com botão VER */}
+        <FlatList
+          data={tabData[activeTab]}
+          keyExtractor={(it) => it.id}
+          renderItem={({ item }) => (
+            <View style={styles.figmaItem}>
+              <Image source={item.imagem} style={styles.figmaAvatar} />
+              <View style={styles.figmaTextContainer}>
+                <Text style={styles.figmaName}>{item.nome}</Text>
+                <Text style={styles.figmaMessage} numberOfLines={1}>{item.descricao}</Text>
+              </View>
+              <TouchableOpacity style={styles.verButton} onPress={() => {/* navegar */}}>
+                <Text style={styles.verText}>Ver</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          ItemSeparatorComponent={() => <View style={styles.divider} />}
+          contentContainerStyle={[{ paddingBottom: 120 }, styles.contentPaddingForBottomBar]}
+        />
+      </View>
+
+      {/* Bottom selection bar similar ao Figma */}
+      <View style={styles.figmaBottomBar}>
+        <TouchableOpacity style={styles.bottomIconArea} onPress={() => searchInputRef.current?.focus()}>
+          <Image source={ searchQuery.length > 0 ? require('../../assets/icon-lupa-selecionado.png') : require('../../assets/icon-lupa-naoselecionado.png')} style={styles.bottomIcon} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.bottomIconArea} onPress={() => navigation.navigate('ProfileScreen')}>
+          {/* Mostrar foto do usuário se existir, caso contrário usar padrao-foto */}
+          <Image source={ user?.fotoPerfil ? { uri: user.fotoPerfil } : require('../../assets/padrao-foto.png')} style={[styles.bottomIcon, { borderRadius: 15 }]} />
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
@@ -1358,6 +1222,162 @@ const styles = StyleSheet.create({
   },
   cardCenter: {
     flex: 1,
+  },
+  // --- Estilos inspirados no Figma ---
+  figmaTopBar: {
+    height: 92,
+    backgroundColor: '#2C9E67',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 12) : 12,
+  },
+  logo: {
+    width: 56,
+    height: 56,
+    resizeMode: 'contain',
+  },
+  figmaSearchBar: {
+    flex: 1,
+    height: 44,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 20,
+    marginLeft: 14,
+    marginRight: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchIconLarge: {
+    width: 24,
+    height: 24,
+    tintColor: 'rgba(0,0,0,0.5)',
+    marginRight: 8,
+    resizeMode: 'contain',
+  },
+  searchInputFigma: {
+    flex: 1,
+    fontSize: 16,
+    color: 'rgba(0,0,0,0.8)'
+  },
+  funnelIcon: {
+    width: 20,
+    height: 20,
+    marginLeft: 6,
+    resizeMode: 'contain',
+    tintColor: 'rgba(0,0,0,0.5)'
+  },
+  figmaContent: {
+    flex: 1,
+    marginHorizontal: 5.5,
+    marginTop: 12,
+    backgroundColor: 'transparent'
+  },
+  tabsRowFigma: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+    paddingHorizontal: 24,
+  },
+  tabLabelFigma: {
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 22,
+    textAlign: 'center'
+  },
+  tabActiveFigma: {
+    color: '#00A3FF',
+    opacity: 1,
+  },
+  tabInactiveFigma: {
+    color: '#00A455',
+    opacity: 0.5,
+  },
+  figmaItem: {
+    height: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14.5,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 6,
+    marginVertical: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  figmaAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: 12,
+    resizeMode: 'cover'
+  },
+  figmaTextContainer: {
+    flex: 1,
+    justifyContent: 'center'
+  },
+  figmaName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#000'
+  },
+  figmaMessage: {
+    fontSize: 12,
+    fontWeight: '300',
+    color: 'rgba(0,0,0,0.6)'
+  },
+  verButton: {
+    width: 84,
+    height: 32,
+    backgroundColor: '#2C9E67',
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  verText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  divider: {
+    height: 1.5,
+    backgroundColor: '#CDC8C8',
+    marginHorizontal: 9
+  },
+  figmaBottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 76,
+    backgroundColor: '#1E5E3F',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingBottom: Platform.OS === 'ios' ? 12 : 8
+  },
+  bottomIconArea: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  bottomIcon: {
+    width: 36,
+    height: 36,
+    resizeMode: 'contain'
+  },
+  // ensure content isn't hidden behind bottom bar
+  contentPaddingForBottomBar: {
+    paddingBottom: 180
   },
 });
 
