@@ -35,7 +35,8 @@ interface UserContextData {
   refreshUser: () => Promise<void>;
 }
 
-// 📊 Dados Mock do Usuário (simulando CadÚnico)
+// 📊 Dados Mock do Usuário (comentado - não usar em produção)
+/*
 const mockUserData: UserProfile = {
   id: '1',
   nome: 'Maria Santos da Silva',
@@ -58,6 +59,7 @@ const mockUserData: UserProfile = {
   verificado: true,
   isLoggedIn: true
 };
+*/
 
 // 🎯 Criação do Contexto
 const UserContext = createContext<UserContextData>({} as UserContextData);
@@ -85,16 +87,15 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       if (userData) {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
+        console.log('✅ Dados do usuário carregados do AsyncStorage:', parsedUser.nome);
       } else {
-        // Para desenvolvimento, usar dados mock
-        // Em produção, isso seria null até o login
-        setUser(mockUserData);
-        await AsyncStorage.setItem('@Boer:userData', JSON.stringify(mockUserData));
+        // Não há usuário logado
+        setUser(null);
+        console.log('ℹ️ Nenhum usuário encontrado no AsyncStorage');
       }
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
-      // Fallback para dados mock em caso de erro
-      setUser(mockUserData);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }

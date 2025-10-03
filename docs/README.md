@@ -2,6 +2,9 @@
 
 ## 📅 Por Data de Modificação
 
+### 2025-10-03 (Quinta-feira)
+- **[SCROLL_BUG_FIX.md](./SCROLL_BUG_FIX.md)** - 🐛 Correção crítica do bug de rolagem na ProfileScreen
+
 ### 2025-09-06 (Sexta-feira)
 - **[FIREBASE_AUTH_ONLY_SOLUTION.md](./2025-09-06_FIREBASE_AUTH_ONLY_SOLUTION.md)** - Solução final para erro 400 Firebase usando apenas Authentication
 
@@ -37,6 +40,7 @@
 - [2025-09-04_PROJECT_STRUCTURE.md](./2025-09-04_PROJECT_STRUCTURE.md)
 
 ### 📝 Formulários e UI
+- [SCROLL_BUG_FIX.md](./SCROLL_BUG_FIX.md) - 🐛 **BUG FIX CRÍTICO** - Rolagem na ProfileScreen
 - [2025-09-05_FORMULARIO_BENEFICIARIO_COMPLETO.md](./2025-09-05_FORMULARIO_BENEFICIARIO_COMPLETO.md)
 - [2025-09-05_SCROLL_FIXES.md](./2025-09-05_SCROLL_FIXES.md)
 - [2025-09-05_SCROLL_MOUSE_DRAG_FIX.md](./2025-09-05_SCROLL_MOUSE_DRAG_FIX.md)

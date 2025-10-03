@@ -17,6 +17,8 @@ import { auth, database } from '../services/connectionFirebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
 import { LoginScreenProps } from '../types/navigation';
+import { useUser } from '../contexts/UserContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -27,6 +29,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // Hook do contexto do usuário
+  const { refreshUser, login } = useUser();
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -40,6 +45,22 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       if (isLogin) {
         // Login do usuário
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        
+        // Verificar se há dados temporários do cadastro
+        const tempUserData = await AsyncStorage.getItem('@Boer:tempUserData');
+        
+        if (tempUserData) {
+          // Se há dados temporários, usar eles e remover do storage
+          console.log('✅ Dados temporários encontrados, fazendo login com dados completos...');
+          const userData = JSON.parse(tempUserData);
+          await login(userData);
+          await AsyncStorage.removeItem('@Boer:tempUserData');
+        } else {
+          // Senão, carregar dados existentes do AsyncStorage
+          console.log('✅ Login bem-sucedido, carregando dados existentes do usuário...');
+          await refreshUser();
+        }
+        
         Alert.alert('Sucesso', 'Login realizado com sucesso!');
         // Navegar para a tela principal após login
         navigation.navigate('MainScreen');

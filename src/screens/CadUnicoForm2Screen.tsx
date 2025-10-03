@@ -18,6 +18,9 @@ import { CadUnicoForm2ScreenProps } from '../types/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/connectionFirebase';
 import { debugCurrentUser } from '../services/firebaseAuthDebug';
+import { useUser } from '../contexts/UserContext';
+import { UserProfile } from '../contexts/UserContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -242,9 +245,42 @@ const CadUnicoForm2Screen: React.FC<CadUnicoForm2ScreenProps> = ({ navigation, r
       
       console.log('✅ Usuário criado no Authentication com UID:', uid);
       
-      console.log('✅ Cadastro finalizado! Redirecionamento imediato para login...');
+      // 🚀 NOVO: Salvar dados completos do usuário no contexto
+      if (!dadosFormulario) {
+        throw new Error('Dados do formulário não encontrados');
+      }
       
-      // Redirecionamento imediato
+      const enderecoCompleto = dadosFormulario.endereco?.split(',') || ['', '', '', '', '', ''];
+      const userData: UserProfile = {
+        id: uid,
+        nome: dadosFormulario.nomeCompleto || '',
+        rg: rg,
+        cpf: cpf,
+        endereco: {
+          rua: enderecoCompleto[0]?.trim() || dadosFormulario.endereco || '',
+          numero: enderecoCompleto[1]?.trim() || '',
+          bairro: enderecoCompleto[2]?.trim() || '',
+          cidade: enderecoCompleto[3]?.trim() || '',
+          cep: enderecoCompleto[4]?.trim() || '',
+          estado: enderecoCompleto[5]?.trim() || 'SP'
+        },
+        telefone: telefone,
+        email: email,
+        senha: senha, // Em produção, NÃO salvar senha no contexto
+        relato: dadosFormulario.relato || '',
+        fotoPerfil: null,
+        dataCadastro: new Date().toISOString(),
+        verificado: false, // Inicialmente não verificado
+        isLoggedIn: true
+      };
+      
+      console.log('💾 Salvando dados do usuário no AsyncStorage para login posterior...');
+      // Salvar dados temporariamente no AsyncStorage para carregar após login
+      await AsyncStorage.setItem('@Boer:tempUserData', JSON.stringify(userData));
+      
+      console.log('✅ Cadastro finalizado! Redirecionamento automático para login...');
+      
+      // Redirecionar imediatamente para login (sem alerta bloqueante)
       navigation.navigate('Login');
 
     } catch (error: any) {

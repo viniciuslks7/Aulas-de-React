@@ -235,11 +235,15 @@ const styles = StyleSheet.create({
     paddingVertical: height * 0.022, // 2.2% da altura
     paddingHorizontal: width * 0.075, // 7.5% da largura
     alignItems: 'center',
-    // Sombra mais sutil e elegante
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    // Sombra mais sutil e elegante - usando boxShadow para web
+    ...(Platform.OS === 'web' ? {
+      boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
+    } : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+    }),
     elevation: 6,
   },
   buttonText: {

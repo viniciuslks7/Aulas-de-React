@@ -9,18 +9,16 @@ import {
   Image,
   TextInput,
   Alert,
-  Animated,
   StatusBar,
   Platform,
   Modal,
-  Dimensions
+  Dimensions,
+  RefreshControl
 } from 'react-native';
 import { ProfileScreenProps } from '../types/navigation';
 import { useUser } from '../contexts/UserContext';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
-import { storage, auth } from '../services/connectionFirebase';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth } from '../services/connectionFirebase';
 import { updateEmail as firebaseUpdateEmail, updatePassword as firebaseUpdatePassword, deleteUser as firebaseDeleteUser } from 'firebase/auth';
 import { 
   maskCPF, 
@@ -42,20 +40,15 @@ const GradientBackground = ({ colors, style, children }: {
 }) => {
   return (
     <View style={[style, { backgroundColor: colors[0] }]}>
+      {/* Make overlays non-interactive so they don't capture touch events */}
       <View style={[
-        StyleSheet.absoluteFill, 
-        { 
-          backgroundColor: colors[1], 
-          opacity: 0.7 
-        }
-      ]} />
+        StyleSheet.absoluteFill,
+        { backgroundColor: colors[1], opacity: 0.7 }
+      ]} pointerEvents="none" />
       <View style={[
-        StyleSheet.absoluteFill, 
-        { 
-          backgroundColor: colors[2] || colors[1], 
-          opacity: 0.4 
-        }
-      ]} />
+        StyleSheet.absoluteFill,
+        { backgroundColor: colors[2] || colors[1], opacity: 0.4 }
+      ]} pointerEvents="none" />
       {children}
     </View>
   );
@@ -175,33 +168,46 @@ const mockUserData: UserProfile = {
 };
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const { user, updateUser, isLoading, logout } = useUser();
+  const { user, updateUser, isLoading, logout, refreshUser } = useUser();
   const [editMode, setEditMode] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValues, setTempValues] = useState<any>({});
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const scrollRef = useRef<ScrollView | null>(null);
   
-  // Usar dados do contexto ou fallback para mock
-  const userData = user || mockUserData;
+  // Função para recarregar dados do Firebase
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshUser();
+    } catch (error) {
+      console.error('Erro ao recarregar dados:', error);
+      Alert.alert('Erro', 'Não foi possível recarregar os dados do perfil.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   
-  // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-
+  // Usar dados do contexto (Firebase) - NUNCA usar mock em produção
+  const userData = user;
+  
+  // Se não houver usuário logado, redirecionar para login
   React.useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      })
-    ]).start();
-  }, []);
+    if (!user && !isLoading) {
+      Alert.alert('Sessão expirada', 'Faça login novamente para acessar seu perfil.');
+      navigation.replace('Login');
+    }
+  }, [user, isLoading, navigation]);
+  
+  // Mostrar loading se ainda carregando dados
+  if (isLoading || !userData) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ fontSize: 18, color: DESIGN_SYSTEM.colors.onSurface }}>Carregando perfil...</Text>
+      </SafeAreaView>
+    );
+  }
 
   // 📝 Função para aplicar máscaras de formatação na exibição
   const formatForDisplay = (field: string, value: string): string => {
@@ -230,7 +236,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       }
 
       // Limpar máscara para campos que precisam ser salvos sem formatação
-      const cleanValue = ['telefone', 'cpf', 'cep'].includes(field) 
+      const cleanValue = ['telefone', 'cpf', 'cep', 'rg'].includes(field) 
         ? cleanMask(field, value) 
         : value;
 
@@ -243,50 +249,65 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     }
   };
 
-  // � Seleção de imagem e upload para Firebase Storage
+  // 📷 Seleção de imagem e salvamento local (base64)
   const pickImageAndUpload = async (fromCamera = false) => {
     try {
-      // pedir permissão
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        Alert.alert('Permissão negada', 'Precisamos de permissão para acessar suas fotos.');
+      let permissionResult;
+      let result;
+
+      if (fromCamera) {
+        permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permissionResult.granted) {
+          Alert.alert('Permissão negada', 'Precisamos de permissão para acessar a câmera.');
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.5, // Reduzir qualidade para não sobrecarregar AsyncStorage
+          base64: true, // Obter base64 diretamente
+        });
+      } else {
+        permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permissionResult.granted) {
+          Alert.alert('Permissão negada', 'Precisamos de permissão para acessar suas fotos.');
+          return;
+        }
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.5, // Reduzir qualidade para não sobrecarregar AsyncStorage
+          base64: true, // Obter base64 diretamente
+        });
+      }
+
+      if (result.canceled || !result.assets?.length) {
         return;
       }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 0.8,
-      });
+      // Fechar modal e mostrar loading
+      setShowPhotoModal(false);
+      Alert.alert('⏳ Salvando', 'Aguarde enquanto sua foto é salva...');
 
-
-      if ((result as any).canceled || !(result as any).assets?.length) return;
-
-      const localUri = (result as any).assets[0].uri;
-
-      // Ler como base64 e enviar para Firebase Storage
-      const fileInfo = await FileSystem.readAsStringAsync(localUri, { encoding: 'base64' });
-      // converter base64 para blob
-      const binary = atob(fileInfo);
-      const len = binary.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binary.charCodeAt(i);
+      // Obter a imagem em base64
+      const base64Image = result.assets[0].base64;
+      
+      if (!base64Image) {
+        throw new Error('Não foi possível processar a imagem');
       }
-      const blob = bytes.buffer;
 
-      const filename = `profile_${userData.id || 'unknown'}_${Date.now()}.jpg`;
-      const sRef = storageRef(storage, `profile_photos/${filename}`);
+      // Salvar como data URI (formato compatível com Image source)
+      const photoDataUri = `data:image/jpeg;base64,${base64Image}`;
 
-  await uploadBytes(sRef, bytes);
-      const downloadUrl = await getDownloadURL(sRef);
-
-      // Persistir a URL no usuário
-      await updateUser({ fotoPerfil: downloadUrl });
-      Alert.alert('✅ Sucesso', 'Foto de perfil atualizada.');
+      // Atualizar perfil do usuário com a foto em base64
+      await updateUser({ fotoPerfil: photoDataUri });
+      
+      Alert.alert('✅ Sucesso', 'Foto de perfil atualizada com sucesso!');
     } catch (error) {
-      console.error('Erro upload foto:', error);
-      Alert.alert('❌ Erro', 'Não foi possível enviar a foto.');
+      console.error('Erro ao salvar foto:', error);
+      Alert.alert('❌ Erro', 'Não foi possível salvar a foto. Tente novamente.');
+      setShowPhotoModal(false);
     }
   };
 
@@ -379,6 +400,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const EditableField = ({ 
     label, 
     value, 
+    rawValue, 
     field, 
     editable = true, 
     multiline = false,
@@ -386,7 +408,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     icon = '📝'
   }: {
     label: string;
-    value: string;
+    value: string; // display value (masked)
+    rawValue?: string; // value used for editing (unmasked)
     field: string;
     editable?: boolean;
     multiline?: boolean;
@@ -394,7 +417,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     icon?: string;
   }) => {
     const isEditing = editingField === field;
-    const currentValue = tempValues[field as keyof UserProfile] as string || value;
+    // When editing prefer temp value, then rawValue (unmasked), then value
+    const currentValue = (tempValues[field as keyof UserProfile] as string) ?? rawValue ?? value;
 
     return (
       <View style={styles.fieldContainer}>
@@ -405,7 +429,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               style={[styles.editInput, multiline && styles.multilineInput]}
               value={currentValue}
               onChangeText={(text) => {
-                const maskedText = ['telefone', 'cpf', 'cep'].includes(field) 
+                // apply mask while typing only for certain fields
+                const maskedText = ['telefone', 'cpf', 'cep', 'rg'].includes(field) 
                   ? applyMask(field, text) 
                   : text;
                 setTempValues((prev: any) => ({ ...prev, [field]: maskedText }));
@@ -431,26 +456,31 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </View>
           </View>
         ) : (
-          <View style={styles.fieldValueContainer}>
-            <Text style={[
-              styles.fieldValue, 
-              !editable && styles.readOnlyValue,
-              multiline && styles.multilineValue
-            ]}>
-              {value}
-            </Text>
-            {editable && (
-              <TouchableOpacity 
-                style={styles.editIcon}
-                onPress={() => {
-                  setEditingField(field);
-                  setTempValues({ [field]: value });
-                }}
-              >
-                <Text style={styles.editIconText}>✏️</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            disabled={!editable}
+            onPress={() => {
+              if (!editable) return;
+              setEditingField(field);
+              // seed tempValues with rawValue (so editing starts with unmasked data)
+              setTempValues({ [field]: rawValue ?? value });
+            }}
+          >
+            <View style={styles.fieldValueContainer}>
+              <Text style={[
+                styles.fieldValue, 
+                !editable && styles.readOnlyValue,
+                multiline && styles.multilineValue
+              ]}>
+                {value}
+              </Text>
+              {editable && (
+                <View style={styles.editIcon}>
+                  <Text style={styles.editIconText}>✏️</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
         )}
         {!editable && (
           <Text style={styles.readOnlyHint}>📍 Informação do CadÚnico - Não editável</Text>
@@ -480,122 +510,230 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
           </View>
         </GradientBackground>
 
-        <ScrollView 
+        <ScrollView
+          ref={scrollRef}
           style={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={true}
+          keyboardShouldPersistTaps="handled"
+          bounces={true}
+          scrollEnabled={true}
+          nestedScrollEnabled={true}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={[DESIGN_SYSTEM.colors.primary]}
+              tintColor={DESIGN_SYSTEM.colors.primary}
+            />
+          }
+          onLayout={(event) => {
+            const { height: layoutHeight } = event.nativeEvent.layout;
+            console.log('[ProfileScreen] ScrollView layout height:', layoutHeight);
+          }}
+          onContentSizeChange={(contentWidth, contentHeight) => {
+            console.log('[ProfileScreen] Content size:', { contentWidth, contentHeight });
+            console.log('[ProfileScreen] Can scroll:', contentHeight > (height - 120));
+          }}
         >
-          <Animated.View 
-            style={[
-              styles.profileContent,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }]
-              }
-            ]}
-          >
-            {/* Profile Photo Section */}
-            <View style={styles.photoSection}>
-              <TouchableOpacity 
-                style={styles.photoContainer}
-                onPress={() => setShowPhotoModal(true)}
-              >
-                <Image 
-                  source={userData.fotoPerfil || require('../../assets/logo.png')}
-                  style={styles.profilePhoto}
-                />
-                <View style={styles.photoEditOverlay}>
-                  <Text style={styles.photoEditText}>📷</Text>
-                </View>
-                {userData.verificado && (
-                  <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedIcon}>✓</Text>
+            <View style={styles.profileContent}>
+              {/* Profile Photo Section */}
+              <View style={styles.photoSection}>
+                <TouchableOpacity 
+                  style={styles.photoContainer}
+                  onPress={() => setShowPhotoModal(true)}
+                >
+                  <Image 
+                    source={
+                      userData.fotoPerfil
+                        ? (typeof userData.fotoPerfil === 'string' ? { uri: userData.fotoPerfil } : userData.fotoPerfil)
+                        : require('../../assets/padrao-foto.png')
+                    }
+                    style={styles.profilePhoto}
+                  />
+                  <View style={styles.photoEditOverlay}>
+                    <Text style={styles.photoEditText}>📷</Text>
                   </View>
-                )}
-              </TouchableOpacity>
-              <Text style={styles.profileName}>{userData.nome}</Text>
-              <Text style={styles.profileSubtitle}>Cadastro Único - Verificado</Text>
-            </View>
+                  {userData.verificado && (
+                    <View style={styles.verifiedBadge}>
+                      <Text style={styles.verifiedIcon}>✓</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+                <Text style={styles.profileName}>{userData.nome}</Text>
+                <Text style={styles.profileSubtitle}>Cadastro Único - Verificado</Text>
+              </View>
 
-            {/* Personal Information */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>📋 Informações Pessoais</Text>
-              
-              <EditableField
-                label="Nome Completo"
-                value={userData.nome}
-                field="nome"
-                editable={false}
-                icon="👤"
-              />
-              
-              <EditableField
-                label="CPF"
-                value={formatForDisplay('cpf', userData.cpf)}
-                field="cpf"
-                editable={false}
-                icon="🆔"
-              />
-              
-              <EditableField
-                label="RG"
-                value={formatForDisplay('rg', userData.rg)}
-                field="rg"
-                editable={false}
-                icon="📄"
-              />
-            </View>
+              {/* Personal Information */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>📋 Informações Pessoais</Text>
+                
+                {/* Nome (read-only) */}
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>👤 Nome Completo</Text>
+                  <View style={styles.readOnlyField}>
+                    <Text style={styles.readOnlyValue}>{userData.nome}</Text>
+                  </View>
+                  <Text style={styles.readOnlyHint}>📍 Informação do CadÚnico - Não editável</Text>
+                </View>
+                
+                {/* Read-only fields for government documents */}
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>🆔 CPF</Text>
+                  <View style={styles.readOnlyField}>
+                    <Text style={styles.readOnlyValue}>{formatForDisplay('cpf', userData.cpf)}</Text>
+                  </View>
+                  <Text style={styles.readOnlyHint}>📍 Informação do CadÚnico - Não editável</Text>
+                </View>
 
-            {/* Contact Information */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>📞 Informações de Contato</Text>
-              
-              <EditableField
-                label="Telefone"
-                value={formatForDisplay('telefone', userData.telefone)}
-                field="telefone"
-                editable={true}
-                keyboardType="phone-pad"
-                icon="📱"
-              />
-              
-              <EditableField
-                label="E-mail"
-                value={userData.email}
-                field="email"
-                editable={true}
-                keyboardType="email-address"
-                icon="📧"
-              />
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>📄 RG</Text>
+                  <View style={styles.readOnlyField}>
+                    <Text style={styles.readOnlyValue}>{formatForDisplay('rg', userData.rg)}</Text>
+                  </View>
+                  <Text style={styles.readOnlyHint}>📍 Informação do CadÚnico - Não editável</Text>
+                </View>
+              </View>
 
-              {/* Password field (editable) */}
-              <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>🔒 Senha</Text>
-                {editingField === 'senha' ? (
-                  <View style={styles.editContainer}>
-                    <TextInput
-                      style={styles.editInput}
-                      value={tempValues.senha || ''}
-                      onChangeText={(text) => setTempValues((prev: any) => ({ ...prev, senha: text }))}
-                      placeholder="Nova senha"
-                      secureTextEntry
-                      autoFocus
-                    />
-                    <TextInput
-                      style={styles.editInput}
-                      value={tempValues.senhaConfirm || ''}
-                      onChangeText={(text) => setTempValues((prev: any) => ({ ...prev, senhaConfirm: text }))}
-                      placeholder="Confirme a nova senha"
-                      secureTextEntry
-                    />
-                    <View style={styles.editActions}>
+              {/* Contact Information */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>📞 Informações de Contato</Text>
+                
+                <EditableField
+                  label="Telefone"
+                  value={formatForDisplay('telefone', userData.telefone)}
+                  rawValue={cleanMask('telefone', userData.telefone)}
+                  field="telefone"
+                  editable={true}
+                  keyboardType="phone-pad"
+                  icon="📱"
+                />
+                
+                <EditableField
+                  label="E-mail"
+                  value={userData.email}
+                  field="email"
+                  editable={true}
+                  keyboardType="email-address"
+                  icon="📧"
+                />
+
+                {/* Password field (editable) */}
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>🔒 Senha</Text>
+                  {editingField === 'senha' ? (
+                    <View style={styles.editContainer}>
+                      <TextInput
+                        style={styles.editInput}
+                        value={tempValues.senha || ''}
+                        onChangeText={(text) => setTempValues((prev: any) => ({ ...prev, senha: text }))}
+                        placeholder="Nova senha"
+                        secureTextEntry
+                        autoFocus
+                      />
+                      <TextInput
+                        style={styles.editInput}
+                        value={tempValues.senhaConfirm || ''}
+                        onChangeText={(text) => setTempValues((prev: any) => ({ ...prev, senhaConfirm: text }))}
+                        placeholder="Confirme a nova senha"
+                        secureTextEntry
+                      />
+                      <View style={styles.editActions}>
+                        <TouchableOpacity
+                          style={styles.saveButton}
+                          onPress={() => handleChangePassword(tempValues.senha, tempValues.senhaConfirm)}
+                        >
+                          <Text style={styles.saveButtonText}>✅ Salvar Senha</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.cancelButton}
+                          onPress={handleCancel}
+                        >
+                          <Text style={styles.cancelButtonText}>❌ Cancelar</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.fieldValueContainer}>
+                      <Text style={[styles.fieldValue, styles.readOnlyValue]}>••••••••</Text>
                       <TouchableOpacity
-                        style={styles.saveButton}
-                        onPress={() => handleChangePassword(tempValues.senha, tempValues.senhaConfirm)}
+                        style={styles.editIcon}
+                        onPress={() => {
+                          setEditingField('senha');
+                          setTempValues({ senha: '', senhaConfirm: '' });
+                        }}
                       >
-                        <Text style={styles.saveButtonText}>✅ Salvar Senha</Text>
+                        <Text style={styles.editIconText}>✏️</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {/* Address Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>🏠 Endereço</Text>
+                
+                {editingField === 'endereco' ? (
+                  <View style={styles.addressEditContainer}>
+                    <TextInput
+                      style={styles.addressInput}
+                      placeholder="Rua"
+                      value={tempValues.endereco?.rua || userData.endereco.rua}
+                      onChangeText={(text) => setTempValues((prev: any) => ({
+                        ...prev,
+                        endereco: { ...prev.endereco, rua: text }
+                      }))}
+                    />
+                    <View style={styles.addressRow}>
+                      <TextInput
+                        style={[styles.addressInput, styles.addressNumber]}
+                        placeholder="Número"
+                        value={tempValues.endereco?.numero || userData.endereco.numero}
+                        onChangeText={(text) => setTempValues((prev: any) => ({
+                          ...prev,
+                          endereco: { ...prev.endereco, numero: text }
+                        }))}
+                      />
+                      <TextInput
+                        style={[styles.addressInput, styles.addressBairro]}
+                        placeholder="Bairro"
+                        value={tempValues.endereco?.bairro || userData.endereco.bairro}
+                        onChangeText={(text) => setTempValues((prev: any) => ({
+                          ...prev,
+                          endereco: { ...prev.endereco, bairro: text }
+                        }))}
+                      />
+                    </View>
+                    <View style={styles.addressRow}>
+                      <TextInput
+                        style={[styles.addressInput, styles.addressCep]}
+                        placeholder="CEP"
+                        value={tempValues.endereco?.cep || userData.endereco.cep}
+                        onChangeText={(text) => setTempValues((prev: any) => ({
+                          ...prev,
+                          endereco: { ...prev.endereco, cep: text }
+                        }))}
+                        keyboardType="numeric"
+                      />
+                      <TextInput
+                        style={[styles.addressInput, styles.addressCidade]}
+                        placeholder="Cidade"
+                        value={tempValues.endereco?.cidade || userData.endereco.cidade}
+                        onChangeText={(text) => setTempValues((prev: any) => ({
+                          ...prev,
+                          endereco: { ...prev.endereco, cidade: text }
+                        }))}
+                      />
+                    </View>
+                    <View style={styles.editActions}>
+                      <TouchableOpacity 
+                        style={styles.saveButton}
+                        onPress={handleSaveAddress}
+                      >
+                        <Text style={styles.saveButtonText}>✅ Salvar Endereço</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
                         style={styles.cancelButton}
                         onPress={handleCancel}
                       >
@@ -604,162 +742,78 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                     </View>
                   </View>
                 ) : (
-                  <View style={styles.fieldValueContainer}>
-                    <Text style={[styles.fieldValue, styles.readOnlyValue]}>••••••••</Text>
-                    <TouchableOpacity
+                  <View style={styles.addressContainer}>
+                    <Text style={styles.addressText}>
+                      {userData.endereco.rua}, {userData.endereco.numero}{'\n'}
+                      {userData.endereco.bairro} - {formatForDisplay('cep', userData.endereco.cep)}{'\n'}
+                      {userData.endereco.cidade}, {userData.endereco.estado}
+                    </Text>
+                    <TouchableOpacity 
                       style={styles.editIcon}
-                      onPress={() => {
-                        setEditingField('senha');
-                        setTempValues({ senha: '', senhaConfirm: '' });
-                      }}
+                      onPress={() => setEditingField('endereco')}
                     >
                       <Text style={styles.editIconText}>✏️</Text>
                     </TouchableOpacity>
                   </View>
                 )}
               </View>
-            </View>
 
-            {/* Address Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>🏠 Endereço</Text>
-              
-              {editingField === 'endereco' ? (
-                <View style={styles.addressEditContainer}>
-                  <TextInput
-                    style={styles.addressInput}
-                    placeholder="Rua"
-                    value={tempValues.endereco?.rua || userData.endereco.rua}
-                    onChangeText={(text) => setTempValues((prev: any) => ({
-                      ...prev,
-                      endereco: { ...prev.endereco, rua: text }
-                    }))}
-                  />
-                  <View style={styles.addressRow}>
-                    <TextInput
-                      style={[styles.addressInput, styles.addressNumber]}
-                      placeholder="Número"
-                      value={tempValues.endereco?.numero || userData.endereco.numero}
-                      onChangeText={(text) => setTempValues((prev: any) => ({
-                        ...prev,
-                        endereco: { ...prev.endereco, numero: text }
-                      }))}
-                    />
-                    <TextInput
-                      style={[styles.addressInput, styles.addressBairro]}
-                      placeholder="Bairro"
-                      value={tempValues.endereco?.bairro || userData.endereco.bairro}
-                      onChangeText={(text) => setTempValues((prev: any) => ({
-                        ...prev,
-                        endereco: { ...prev.endereco, bairro: text }
-                      }))}
-                    />
-                  </View>
-                  <View style={styles.addressRow}>
-                    <TextInput
-                      style={[styles.addressInput, styles.addressCep]}
-                      placeholder="CEP"
-                      value={tempValues.endereco?.cep || userData.endereco.cep}
-                      onChangeText={(text) => setTempValues((prev: any) => ({
-                        ...prev,
-                        endereco: { ...prev.endereco, cep: text }
-                      }))}
-                      keyboardType="numeric"
-                    />
-                    <TextInput
-                      style={[styles.addressInput, styles.addressCidade]}
-                      placeholder="Cidade"
-                      value={tempValues.endereco?.cidade || userData.endereco.cidade}
-                      onChangeText={(text) => setTempValues((prev: any) => ({
-                        ...prev,
-                        endereco: { ...prev.endereco, cidade: text }
-                      }))}
-                    />
-                  </View>
-                  <View style={styles.editActions}>
-                    <TouchableOpacity 
-                      style={styles.saveButton}
-                      onPress={handleSaveAddress}
-                    >
-                      <Text style={styles.saveButtonText}>✅ Salvar Endereço</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={styles.cancelButton}
-                      onPress={handleCancel}
-                    >
-                      <Text style={styles.cancelButtonText}>❌ Cancelar</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.addressContainer}>
-                  <Text style={styles.addressText}>
-                    {userData.endereco.rua}, {userData.endereco.numero}{'\n'}
-                    {userData.endereco.bairro} - {formatForDisplay('cep', userData.endereco.cep)}{'\n'}
-                    {userData.endereco.cidade}, {userData.endereco.estado}
-                  </Text>
-                  <TouchableOpacity 
-                    style={styles.editIcon}
-                    onPress={() => setEditingField('endereco')}
-                  >
-                    <Text style={styles.editIconText}>✏️</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-
-            {/* Story Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>💬 Meu Relato</Text>
-              
-              <EditableField
-                label="Conte sua história"
-                value={userData.relato}
-                field="relato"
-                editable={true}
-                multiline={true}
-                icon="📖"
-              />
-            </View>
-
-            {/* Account Info */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>ℹ️ Informações da Conta</Text>
-              <View style={styles.accountInfo}>
-                <Text style={styles.accountInfoText}>
-                  📅 Cadastrado em: {new Date(userData.dataCadastro).toLocaleDateString('pt-BR')}
-                </Text>
-                <Text style={styles.accountInfoText}>
-                  ✅ Status: {userData.verificado ? 'Verificado pelo CadÚnico' : 'Pendente de verificação'}
-                </Text>
+              {/* Story Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>💬 Meu Relato</Text>
+                
+                <EditableField
+                  label="Conte sua história"
+                  value={userData.relato}
+                  field="relato"
+                  editable={true}
+                  multiline={true}
+                  icon="📖"
+                />
               </View>
-            </View>
-          </Animated.View>
-        </ScrollView>
 
-        {/* Delete account button (demo) */}
-        <View style={styles.deleteButtonContainer}>
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
-            <Text style={styles.deleteButtonText}>Deletar Conta</Text>
-          </TouchableOpacity>
-        </View>
+              {/* Account Info */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>ℹ️ Informações da Conta</Text>
+                <View style={styles.accountInfo}>
+                  <Text style={styles.accountInfoText}>
+                    📅 Cadastrado em: {new Date(userData.dataCadastro).toLocaleDateString('pt-BR')}
+                  </Text>
+                  <Text style={styles.accountInfoText}>
+                    ✅ Status: {userData.verificado ? 'Verificado pelo CadÚnico' : 'Pendente de verificação'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Delete account button (demo) - keep in-flow so ScrollView can size naturally */}
+              <View style={styles.deleteButtonInline}>
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
+                  <Text style={styles.deleteButtonText}>Deletar Conta</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Forced spacer to guarantee scroll */}
+              <View style={{ height: DESIGN_SYSTEM.spacing.xxl * 4, backgroundColor: 'transparent' }} />
+
+            </View>
+          </ScrollView>
 
         {/* Photo Modal */}
         <Modal
           visible={showPhotoModal}
           transparent={true}
-          animationType="fade"
+          animationType="slide"
           onRequestClose={() => setShowPhotoModal(false)}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.photoModal}>
               <Text style={styles.modalTitle}>Alterar Foto de Perfil</Text>
               <View style={styles.photoOptions}>
-                <TouchableOpacity style={styles.photoOption}>
+                <TouchableOpacity style={styles.photoOption} onPress={async () => { await pickImageAndUpload(true); }}>
                   <Text style={styles.photoOptionIcon}>📷</Text>
                   <Text style={styles.photoOptionText}>Tirar Foto</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.photoOption}>
+                <TouchableOpacity style={styles.photoOption} onPress={async () => { await pickImageAndUpload(false); }}>
                   <Text style={styles.photoOptionIcon}>🖼️</Text>
                   <Text style={styles.photoOptionText}>Galeria</Text>
                 </TouchableOpacity>
@@ -782,6 +836,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: DESIGN_SYSTEM.colors.background,
+    position: 'relative',
   },
 
   // Header
@@ -828,15 +883,20 @@ const styles = StyleSheet.create({
 
   // Scroll
   scrollContainer: {
-    flex: 1,
+    height: height - 120, // Fixed height minus header
   },
 
   scrollContent: {
-    paddingBottom: DESIGN_SYSTEM.spacing.xl,
+    paddingHorizontal: DESIGN_SYSTEM.spacing.lg,
+    paddingTop: DESIGN_SYSTEM.spacing.md,
+    paddingBottom: DESIGN_SYSTEM.spacing.xxl * 3,
   },
 
   profileContent: {
-    padding: DESIGN_SYSTEM.spacing.lg,
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
+    paddingTop: DESIGN_SYSTEM.spacing.md,
   },
 
   // Photo Section
@@ -967,6 +1027,15 @@ const styles = StyleSheet.create({
     color: DESIGN_SYSTEM.colors.onSurfaceVariant,
   },
 
+  readOnlyField: {
+    padding: DESIGN_SYSTEM.spacing.md,
+    backgroundColor: DESIGN_SYSTEM.colors.surfaceVariant,
+    borderRadius: DESIGN_SYSTEM.borderRadius.md,
+    borderWidth: 1,
+    borderColor: DESIGN_SYSTEM.colors.outline,
+    marginBottom: DESIGN_SYSTEM.spacing.sm,
+  },
+
   readOnlyHint: {
     fontSize: DESIGN_SYSTEM.typography.caption.fontSize,
     color: DESIGN_SYSTEM.colors.onSurfaceVariant,
@@ -1044,10 +1113,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Delete account button
-  deleteButtonContainer: {
-    marginTop: DESIGN_SYSTEM.spacing.lg,
-    alignItems: 'center'
+  // Delete account button inline
+  deleteButtonInline: {
+    alignItems: 'center',
+    marginTop: DESIGN_SYSTEM.spacing.xl,
+    marginBottom: DESIGN_SYSTEM.spacing.lg,
   },
 
   deleteButton: {
@@ -1058,6 +1128,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 180,
+    ...DESIGN_SYSTEM.shadows.soft,
   },
 
   deleteButtonText: {
