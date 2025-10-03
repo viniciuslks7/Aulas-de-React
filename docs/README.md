@@ -3,6 +3,7 @@
 ## 📅 Por Data de Modificação
 
 ### 2025-10-03 (Quinta-feira)
+- **[PROFILE_AND_STORAGE_CHANGES.md](./2025-10-03_PROFILE_AND_STORAGE_CHANGES.md)** - 🎯 ProfileScreen interativo, armazenamento local de imagens e ajustes de fluxo de autenticação
 - **[SCROLL_BUG_FIX.md](./SCROLL_BUG_FIX.md)** - 🐛 Correção crítica do bug de rolagem na ProfileScreen
 
 ### 2025-09-06 (Sexta-feira)
