@@ -21,6 +21,24 @@ export type RootStackParamList = {
   };
   MainScreen: undefined;
   ProfileScreen: undefined;
+  ItemCrudScreen: undefined;
+  ItemDetailScreen: {
+    item?: {
+      id: string;
+      titulo: string;
+      categoria: string;
+      descricao: string;
+      urgencia: 'Alta' | 'Média' | 'Baixa';
+      dataPostagem: string;
+      status: 'Ativo' | 'Em Andamento' | 'Concluído';
+      localizacao: string;
+      foto: string;
+      beneficiario: {
+        nome: string;
+        verificado: boolean;
+      };
+    };
+  };
   Splash: undefined;
   FirebaseTest: undefined;
 };
@@ -87,4 +105,9 @@ export type MainScreenProps = {
 export type ProfileScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, 'ProfileScreen'>;
   route: RouteProp<RootStackParamList, 'ProfileScreen'>;
+};
+
+export type ItemDetailScreenProps = {
+  navigation: StackNavigationProp<RootStackParamList, 'ItemDetailScreen'>;
+  route: RouteProp<RootStackParamList, 'ItemDetailScreen'>;
 };

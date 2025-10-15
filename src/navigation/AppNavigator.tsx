@@ -16,6 +16,8 @@ import CadUnicoFormScreen from '../screens/CadUnicoFormScreen';
 import CadUnicoForm2Screen from '../screens/CadUnicoForm2Screen';
 import MainScreen from '../screens/MainScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import ItemCrudScreen from '../screens/ItemCrudScreen';
+import ItemDetailScreen from '../screens/ItemDetailScreen';
 import SplashScreen from '../screens/SplashScreen';
 import FirebaseTestScreen from '../screens/FirebaseTestScreen';
 
@@ -178,6 +180,22 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen 
           name="ProfileScreen" 
           component={ProfileScreen}
+          options={{
+            ...TransitionPresets.SlideFromRightIOS,
+            cardStyle: { backgroundColor: '#F1F8E9' },
+          }}
+        />
+        <Stack.Screen 
+          name="ItemCrudScreen" 
+          component={ItemCrudScreen}
+          options={{
+            ...TransitionPresets.SlideFromRightIOS,
+            cardStyle: { backgroundColor: '#F1F8E9' },
+          }}
+        />
+        <Stack.Screen 
+          name="ItemDetailScreen" 
+          component={ItemDetailScreen}
           options={{
             ...TransitionPresets.SlideFromRightIOS,
             cardStyle: { backgroundColor: '#F1F8E9' },

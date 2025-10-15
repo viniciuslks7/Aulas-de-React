@@ -574,6 +574,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
             value={searchQuery}
             onChangeText={handleSearch}
           />
+          <TouchableOpacity onPress={() => navigation.navigate('ItemCrudScreen')} style={styles.crudButton}>
+            <Text style={styles.crudButtonText}>🗂️</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => { /* abrir filtros */ }}>
             <Image source={require('../../assets/Funil-icon.png')} style={styles.funnelIcon} />
           </TouchableOpacity>
@@ -606,7 +609,24 @@ const MainScreen: React.FC<MainScreenProps> = ({ navigation }) => {
                 <Text style={styles.figmaName}>{item.nome}</Text>
                 <Text style={styles.figmaMessage} numberOfLines={1}>{item.descricao}</Text>
               </View>
-              <TouchableOpacity style={styles.verButton} onPress={() => {/* navegar */}}>
+              <TouchableOpacity 
+                style={styles.verButton} 
+                onPress={() => navigation.navigate('ItemDetailScreen', { item: {
+                  id: item.id,
+                  titulo: item.nome,
+                  categoria: item.categoria || 'Alimentação',
+                  descricao: item.descricao,
+                  urgencia: item.urgency === 'high' ? 'Alta' : item.urgency === 'medium' ? 'Média' : 'Baixa',
+                  dataPostagem: '10/10/2025',
+                  status: 'Ativo',
+                  localizacao: item.location || 'São Paulo, SP',
+                  foto: item.imagem,
+                  beneficiario: {
+                    nome: item.nome,
+                    verificado: item.verified
+                  }
+                }})}
+              >
                 <Text style={styles.verText}>Ver</Text>
               </TouchableOpacity>
             </View>
@@ -1378,6 +1398,21 @@ const styles = StyleSheet.create({
   // ensure content isn't hidden behind bottom bar
   contentPaddingForBottomBar: {
     paddingBottom: 180
+  },
+  
+  // CRUD Button Styles
+  crudButton: {
+    width: 32,
+    height: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 8,
+  },
+  crudButtonText: {
+    fontSize: 16,
+    color: '#FFFFFF',
   },
 });
 
